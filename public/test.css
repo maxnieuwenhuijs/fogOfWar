@@ -1,0 +1,1064 @@
+/* --- Basic Setup & Fonts --- */
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English+SC&display=swap");
+
+body {
+	font-family: "Georgia", serif; /* Fallback serif */
+	margin: 0;
+	/* Subtle Parchment Background */
+	background-color: #f5eeda; /* Beige */
+	background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%23f5eeda"/><path d="M0 50 Q25 25 50 50 T100 50 M0 100 Q25 75 50 100 T100 100 M50 0 Q75 25 100 0" stroke="%23d3c0a5" stroke-width="1" fill="none" opacity="0.1"/></svg>');
+	color: #4d3a2a; /* Dark Brown */
+	line-height: 1.6;
+	padding: 0;
+	overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-family: "Cinzel", serif; /* More ornate for headings */
+	color: #5a3d2b; /* Slightly richer brown */
+	margin-top: 0;
+	margin-bottom: 0.8em;
+	font-weight: 700;
+	letter-spacing: 1px;
+}
+
+.main-title-banner {
+	background-color: #2c3e50; /* Dark Napoleonic Blue */
+	color: #f1c40f; /* Gold */
+	padding: 15px 0;
+	text-align: center;
+	margin-bottom: 20px;
+	border-bottom: 4px solid #f39c12; /* Darker Gold */
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+	font-family: "IM Fell English SC", serif; /* Historical Script-like */
+	font-size: 1.5em; /* Make title larger */
+}
+.main-title-banner h1 {
+	margin: 0;
+	color: #f1c40f;
+	text-shadow: 1px 1px 2px #000;
+}
+
+p {
+	margin-bottom: 1em;
+}
+
+label {
+	display: block;
+	margin-bottom: 5px;
+	font-size: 0.9em;
+	font-weight: bold;
+	color: #6b4f3f;
+}
+
+input[type="text"],
+input[type="number"] {
+	width: calc(100% - 22px); /* Adjust for padding */
+	padding: 8px 10px;
+	border: 1px solid #bda88e; /* Brownish border */
+	border-radius: 3px;
+	font-size: 0.95em;
+	font-family: "Georgia", serif;
+	background-color: #fffaf0; /* Creamy white */
+	color: #4d3a2a;
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+	margin-bottom: 5px;
+}
+input[type="number"] {
+	width: 50px; /* Specific width for number inputs */
+}
+
+/* Panel Styling (Chat, Cards, Sidebar) */
+.ui-panel {
+	background-color: rgba(222, 207, 184, 0.8); /* Semi-transparent parchment */
+	border: 2px solid #8b694e; /* Darker wood-like border */
+	border-radius: 5px;
+	padding: 15px;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+	box-sizing: border-box;
+	backdrop-filter: blur(2px); /* Subtle blur for background */
+	display: flex;
+	flex-direction: column;
+	position: relative; /* For potential pseudo-elements */
+}
+
+.ui-panel::before {
+	/* Ornate corner - Example */
+	content: "";
+	position: absolute;
+	top: -1px;
+	left: -1px;
+	width: 15px;
+	height: 15px;
+	border-top: 3px solid #c0a080; /* Lighter wood color */
+	border-left: 3px solid #c0a080;
+	border-top-left-radius: 5px;
+}
+.ui-panel::after {
+	/* Ornate corner - Example */
+	content: "";
+	position: absolute;
+	bottom: -1px;
+	right: -1px;
+	width: 15px;
+	height: 15px;
+	border-bottom: 3px solid #c0a080;
+	border-right: 3px solid #c0a080;
+	border-bottom-right-radius: 5px;
+}
+
+.ui-panel h3 {
+	border-bottom: 1px solid #bda88e;
+	padding-bottom: 8px;
+	margin-bottom: 15px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 1.2em;
+	color: #3b2d20; /* Darkest brown */
+}
+
+.panel-icon {
+	font-size: 1.1em;
+	opacity: 0.8;
+}
+
+/* --- Screen Layout --- */
+.screen {
+	display: none;
+}
+.screen.active {
+	display: block;
+}
+
+.game-area {
+	display: flex;
+	gap: 20px;
+	margin: 0 auto; /* Center area */
+	padding: 20px;
+	align-items: flex-start;
+	justify-content: center;
+	max-width: 1400px; /* Limit max width */
+	flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+/* Kolom 1: Chat */
+#chat-panel {
+	width: 280px;
+	flex-shrink: 0;
+	height: calc(600px + 190px + 15px); /* Approx canvas + card area + gap */
+	max-height: 80vh; /* Limit height */
+	order: 1;
+}
+#chat-messages {
+	flex-grow: 1;
+	overflow-y: auto;
+	background-color: rgba(255, 250, 240, 0.7); /* Lighter parchment */
+	border: 1px solid #c8b8a0;
+	border-radius: 3px;
+	padding: 10px;
+	margin-bottom: 10px;
+}
+.chat-message {
+	margin-bottom: 8px;
+	padding-bottom: 5px;
+	border-bottom: 1px dashed #d3c0a5; /* Dashed separator */
+	font-size: 0.9em;
+}
+.chat-message .player-name {
+	font-weight: bold;
+}
+.chat-message .p1 {
+	color: #96281b;
+} /* Dark Red */
+.chat-message .p2 {
+	color: #1f3a93;
+} /* Dark Blue */
+
+.chat-input-area {
+	display: flex;
+	gap: 10px;
+	flex-shrink: 0;
+}
+#chat-input {
+	flex-grow: 1;
+	margin-bottom: 0;
+}
+
+/* Kolom 2: Board + Cards */
+.board-and-cards-area {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	align-items: center; /* Centreert wrapper horizontaal */
+	flex-shrink: 0;
+	order: 2;
+	/* Verwijder background en padding van hier */
+}
+
+/* --- NIEUW: Styling voor de Background Wrapper --- */
+#board-background-wrapper {
+	/* padding: 30px; */ /* Verwijderd */
+	background-image: url(assets/images/background.png);
+	background-size: cover;
+	background-position: center center;
+	background-repeat: no-repeat;
+	/* border: 1px solid #a08c78; */ /* Verwijderd */
+	border-radius: 5px;
+	/* background-color: #c8b8a0; */ /* Verwijderd */
+	/* display: inline-block; */ /* Verwijderd */
+	/* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */ /* Verwijderd */
+	width: 750px;
+	height: 750px;
+	display: flex; /* Gewijzigd naar flex */
+	justify-content: center; /* Centreert #game-container horizontaal */
+	align-items: center; /* Centreert #game-container verticaal */
+}
+
+/* --- Styling voor de gesimuleerde Game Container --- */
+#game-container {
+	width: 600px;
+	height: 600px;
+	/* border: 3px ridge #7a6a58; */ /* Oude border */
+	border: 1px ridge #977844; /* Nieuwe border */
+	box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+	position: relative;
+	overflow: hidden; /* Belangrijk voor ::before pseudo-element */
+	display: grid;
+	grid-template-columns: repeat(11, 1fr);
+	grid-template-rows: repeat(11, 1fr);
+
+	/* --- Basis achtergrondkleur voor het grid zelf --- */
+	/* background-color: #a09383; */ /* Oude kleur */
+	background-color: #e7c07d69; /* Nieuwe kleur */
+	/* margin: auto; */ /* Niet nodig door flex parent */
+	/* vertical-align: middle; */ /* Niet van toepassing op grid container */
+	border-radius: 5px; /* Nieuwe border-radius */
+}
+
+/* --- NIEUW: Pseudo-element voor Grid Lines OVER de achtergrond --- */
+#game-container::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	pointer-events: none; /* Zorgt dat grid clicks niet blokkeert */
+	z-index: 1; /* Grid boven achtergrond, onder pionnen/havens */
+
+	/* Grid line styling */
+	--cell-size: calc(100% / 11);
+    --grid-line-color: #ac8130; /* Nieuwe kleur */
+    --line-thickness: 1px; /* Expliciete lijndikte */
+
+	background:
+		/* Vertical lines */
+		linear-gradient(to right, var(--grid-line-color) var(--line-thickness), transparent var(--line-thickness)),
+		/* Horizontal lines */
+		linear-gradient(to bottom, var(--grid-line-color) var(--line-thickness), transparent var(--line-thickness));
+	background-size: var(--cell-size) var(--cell-size); /* Herhaal per cel */
+    /* background-position: 0 0; */ /* Standaard is prima */
+}
+
+
+/* --- Styling voor de Haven Divs --- */
+.haven-cell {
+	/* Wordt geplaatst door inline style grid-area */
+	z-index: 2; /* Boven grid lijnen, onder pionnen */
+	pointer-events: none; /* Niet klikbaar maken */
+	/* Behoud oude havenkleuren, maar iets transparanter */
+	--haven1-color-bg: rgba(255, 204, 204, 0.35); /* Lichter rood */
+	--haven2-color-bg: rgba(204, 204, 255, 0.35); /* Lichter blauw */
+}
+.haven-cell.player-1-haven {
+	background-color: var(--haven1-color-bg);
+}
+.haven-cell.player-2-haven {
+	background-color: var(--haven2-color-bg);
+}
+
+/* --- Container voor Stats binnen Pion (Flexbox Layout) --- */
+.pawn-stats-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    gap: 2px;
+
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around; /* Verdeelt ruimte tussen stats */
+    align-items: center; /* Centreert stats horizontaal */
+    padding: 5% 0; /* Kleine verticale padding */
+    box-sizing: border-box;
+    z-index: 5; /* Boven de ::after munt */
+    pointer-events: none; /* Container zelf niet klikbaar */
+		width: 100%;
+
+}
+
+/* --- Styling voor de individuele Stats op de Pionnen --- */
+.test-pawn .stat {
+	/* Verwijder position: absolute en top/left/right/bottom */
+	/* position: absolute; */
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	font-size: 10px;
+	font-weight: bold;
+	color: #ffffff;
+	line-height: 1;
+	/* pointer-events: none; */ /* Verplaatst naar container */
+    /* z-index: 5; */ /* Verplaatst naar container */
+    width: fit-content; /* Plaque past zich aan */
+
+	/* Achtergrond Plaque voor Contrast */
+	background-color: rgba(0, 0, 0, 0.6);
+	padding: 1px 4px;
+	border-radius: 3px;
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Icoontjes binnen stat */
+.test-pawn .stat > span:first-child {
+	display: inline-block;
+	/* filter: drop-shadow(1px 1px 0px #000); */ /* Optioneel: drop shadow op icoon */
+}
+
+/* Pion styling (::after blijft hetzelfde) */
+.test-pawn {
+	/* Basis styling blijft */
+	width: 90%;
+	height: 90%;
+	border-radius: 50%;
+	place-self: center;
+	position: relative; /* Nodig voor ::after en stats container */
+	cursor: pointer;
+	border: none;
+	box-shadow: 0 4px 7px rgba(0, 0, 0, 0.5), inset 0 0 0 3px rgba(0, 0, 0, 0.4),
+		inset 0px 2px 3px rgba(255, 255, 255, 0.1),
+		inset 0px -2px 3px rgba(0, 0, 0, 0.3);
+	transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+	z-index: 3; /* Pionnen boven havens en grid lines */
+
+	/* Default Variables */
+	--pawn-base-color: #555;
+	--pawn-highlight-color: #888;
+	--pawn-shadow-color: #333;
+	--coin-tint-color: #e6ac00;
+	--coin-border-color: #8c731a;
+}
+
+/* --- Player 1 Specifieke Kleuren & Gradients --- */
+.test-pawn.player-1 {
+	--pawn-base-color: #a91414;
+	--pawn-highlight-color: #d44a4a; /* Lichter rood */
+	--pawn-shadow-color: #7c0f0f; /* Donkerder rood */
+	--coin-tint-color: #e74c3c; /* Fel rood voor munt tint */
+	--coin-border-color: #a1352a; /* Donker rood-bruin voor munt rand */
+
+	/* Buitenste knop gradient met highlight */
+	background-color: var(--pawn-base-color);
+	background-image: radial-gradient(
+		circle at 50% 40%,
+		var(--pawn-highlight-color) 0%,
+		var(--pawn-base-color) 70%
+	);
+}
+
+/* --- Player 2 Specifieke Kleuren & Gradients --- */
+.test-pawn.player-2 {
+	--pawn-base-color: #1f3a93;
+	--pawn-highlight-color: #4a6db3; /* Lichter blauw */
+	--pawn-shadow-color: #152864; /* Donkerder blauw */
+	--coin-tint-color: #3498db; /* Helder blauw voor munt tint */
+	--coin-border-color: #21618c; /* Donker cyaan-blauw voor munt rand */
+
+	/* Buitenste knop gradient met highlight */
+	background-color: var(--pawn-base-color);
+	background-image: radial-gradient(
+		circle at 50% 40%,
+		var(--pawn-highlight-color) 0%,
+		var(--pawn-base-color) 70%
+	);
+}
+
+/* --- Styling voor de binnenste "Munt" ring (Gebruikt nu variabelen) --- */
+.test-pawn::after {
+	content: "";
+	position: absolute;
+	width: 60%;
+	height: 60%;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	border-radius: 50%;
+    z-index: 1; /* Achter de stats container */
+
+	/* Gebruik tint variabele als basis */
+	background-color: var(--coin-tint-color);
+
+	/* Gradient met speler tint en metallic glans */
+	background-image: linear-gradient(
+		160deg,
+		/* Lichte highlight (minder geel dan puur goud) */
+			color-mix(in srgb, var(--coin-tint-color) 10%, #ffffff 90%) 5%,
+		/* Speler's tint */ var(--coin-tint-color) 40%,
+		/* Donkerdere versie van de tint */
+			color-mix(in srgb, var(--coin-tint-color) 70%, #333 30%) 75%,
+		/* Donkere schaduw rand (nu ook licht getint) */
+			color-mix(in srgb, var(--coin-tint-color) 20%, #504010 80%) 95%
+	);
+
+	/* Rand gebruikt nu ook variabele */
+	border: 2px solid var(--coin-border-color);
+
+	/* Schaduw binnen de munt voor diepte */
+	box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.25),
+		/* Iets sterkere highlight */ inset 0 -2px 3px rgba(0, 0, 0, 0.35); /* Iets sterkere schaduw */
+}
+
+/* Hover effect blijft grotendeels hetzelfde, maar gebruikt nu de bestaande schaduw structuur */
+.test-pawn:hover {
+	transform: scale(1.05) translateY(-2px);
+	box-shadow: 0 6px 10px rgba(0, 0, 0, 0.55),
+		/* Grotere 'lift' schaduw */ inset 0 0 0 3px rgba(0, 0, 0, 0.4),
+		inset 0px 2px 3px rgba(255, 255, 255, 0.15),
+		inset 0px -2px 3px rgba(0, 0, 0, 0.35); /* Schaduwen binnenkant iets versterkt */
+}
+
+/* Override placeholder text style if it exists */
+.canvas-placeholder .placeholder-text {
+	display: none; /* Verberg oude placeholder tekst */
+}
+
+/* Pas de hoogte van de zijbalken aan als de card-ui-area verandert */
+#chat-panel,
+#ui-sidebar {
+	/* Dynamische hoogte is lastig zonder JS, zet een redelijke max-height */
+	max-height: calc(
+		600px + 250px + 20px
+	); /* Geschatte max hoogte canvas + card-ui + gap */
+	/* OF gebruik viewport hoogte als limiet */
+	/* max-height: 85vh; */
+}
+
+#card-ui-area {
+	width: 600px;
+	min-height: 190px;
+}
+
+/* --- Card Definition UI --- */
+#card-presets h4 {
+	font-size: 0.9em;
+	margin-bottom: 8px;
+}
+.preset-buttons-container {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-bottom: 15px;
+}
+.preset-button {
+	padding: 5px 12px;
+	font-size: 0.85em;
+	font-family: "Georgia", serif;
+	background-color: #d3c0a5; /* Light wood/parchment */
+	border: 1px solid #8b694e;
+	color: #4d3a2a;
+	border-radius: 15px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+.preset-button:hover {
+	background-color: #c0a080;
+	border-color: #7a6a58;
+}
+
+.card-input-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 15px;
+	margin-bottom: 20px;
+}
+.card-inputs {
+	border: 1px solid #bda88e;
+	border-radius: 4px;
+	padding: 12px;
+	background-color: rgba(255, 250, 240, 0.8); /* Slightly lighter parchment */
+}
+.card-inputs h4 {
+	font-size: 1em;
+	margin-bottom: 10px;
+	text-align: center;
+}
+.card-sum {
+	display: block;
+	margin-top: 10px;
+	font-weight: bold;
+	text-align: right;
+	font-size: 0.9em;
+}
+span.card-sum[style*="color: red"] {
+	/* Style invalid sum */
+	color: #c0392b !important; /* Dark Red */
+}
+
+/* --- Card Reveal UI --- */
+#card-reveal-ui .players-cards {
+	display: flex;
+	gap: 20px;
+	margin-bottom: 15px;
+}
+#card-reveal-ui .player-cards-section {
+	flex: 1;
+}
+#card-reveal-ui h4 {
+	font-size: 1em;
+	margin-bottom: 10px;
+}
+#card-reveal-ui .revealed-cards {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+}
+
+/* --- Napoleonic Fantasy Card Styling --- */
+
+/* Container voor de kaarten in de linking fase */
+#available-cards-linking .card-list-container {
+	display: grid;
+	grid-template-columns: repeat(
+		auto-fit,
+		minmax(110px, 1fr)
+	); /* Responsive grid */
+	gap: 15px;
+	margin-top: 10px;
+}
+
+/* Basis kaart stijl */
+.card-item {
+	background-color: #fffaf0; /* Creamy parchment */
+	border: 3px solid #a08c78; /* Default wood/leather border */
+	border-radius: 8px; /* Rounded corners */
+	padding: 10px;
+	box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2); /* Drop shadow */
+	min-height: 130px; /* Consistent height */
+	display: flex;
+	flex-direction: column;
+	font-family: "Georgia", serif;
+	position: relative; /* For overlay */
+	transition: all 0.2s ease-in-out;
+	cursor: pointer;
+	overflow: hidden; /* Clip potential pseudo-elements */
+}
+
+/* Speler-specifieke randkleuren (gebruikt dezelfde variabelen als de pionnen) */
+.card-item.player-1 {
+	border-color: var(--pawn-base-color, #a91414); /* Rood */
+}
+.card-item.player-2 {
+	border-color: var(--pawn-base-color, #1f3a93); /* Blauw */
+}
+
+/* Kaart Titel */
+.card-item .card-title {
+	font-family: "Cinzel", serif;
+	font-weight: bold;
+	text-align: center;
+	font-size: 0.9em;
+	color: #5a3d2b; /* Dark brown */
+	border-bottom: 1px solid #d3c0a5; /* Parchment line */
+	padding-bottom: 6px;
+	margin-bottom: 8px;
+	letter-spacing: 0.5px;
+}
+
+/* Stats Container */
+.card-item .card-stats {
+	flex-grow: 1; /* Neemt resterende ruimte */
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around; /* Verdeelt stats verticaal */
+	align-items: center; /* Centreert stats horizontaal */
+	font-size: 1.1em; /* Maak stats iets groter */
+	color: #4d3a2a; /* Dark brown */
+}
+
+/* Individuele stat lijn */
+.card-item .card-stats span {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+/* Stat Icon Styling (emoji als placeholder) */
+.card-item .icon {
+	font-size: 1em; /* Pas grootte aan indien nodig */
+	display: inline-block;
+	min-width: 1.2em; /* Zorgt voor uitlijning */
+	text-align: center;
+	opacity: 0.9;
+}
+/* Specifieke icon kleuren (optioneel) */
+.hp-icon {
+	color: #c0392b;
+} /* Rood */
+.speed-icon {
+	color: #2980b9;
+} /* Blauw */
+.attack-icon {
+	color: #8e44ad;
+} /* Paars */
+
+/* Stat Waarde */
+.card-item .value {
+	font-weight: bold;
+}
+
+/* Geselecteerde Kaart Stijl */
+.card-item.card-selected {
+	transform: scale(1.03) translateY(-2px);
+	box-shadow: 0 0 15px var(--pawn-highlight-color, #f1c40f); /* Glow effect in player color or gold */
+	/* Maak de rand opvallender */
+	border-width: 4px;
+	border-style: double; /* Ornate border */
+	border-color: color-mix(
+		in srgb,
+		var(--pawn-base-color, #777) 70%,
+		#fff 30%
+	); /* Lichtere versie van spelerkleur */
+}
+
+/* Gelinkte Kaart Stijl */
+.card-item.linked {
+	cursor: not-allowed;
+	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15); /* Minder opvallend */
+	/* Maak kaart inhoud minder zichtbaar */
+	/* filter: grayscale(50%) opacity(70%); */ /* Optie 1: grijzer/vager */
+}
+
+/* Overlay voor gelinkte kaarten */
+.linked-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(40, 40, 40, 0.75); /* Donker semi-transparant */
+	color: #f0e0c0; /* Licht perkament text */
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-family: "IM Fell English SC", serif; /* Thematisch font */
+	font-size: 1.1em;
+	font-weight: bold;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	border-radius: 6px; /* Match kaart radius (iets minder dan parent) */
+	text-shadow: 1px 1px 1px #000;
+	opacity: 0; /* Start onzichtbaar */
+	transition: opacity 0.3s ease-in-out;
+	pointer-events: none; /* Zorgt dat je niet op de overlay klikt */
+}
+
+.card-item.linked .linked-overlay {
+	opacity: 1; /* Maak zichtbaar als kaart .linked heeft */
+}
+
+/* Optioneel: Iets andere hover voor niet-gelinkte kaarten */
+.card-item:not(.linked):hover {
+	transform: translateY(-3px);
+	box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+#initiative-result {
+	border-top: 1px dashed #bda88e;
+	padding-top: 10px;
+	margin-top: 15px;
+	text-align: center;
+}
+#initiative-result h4 {
+	margin-bottom: 5px;
+}
+#initiative-result p {
+	margin: 3px 0;
+	font-size: 0.95em;
+}
+
+/* --- Linking UI / RPS --- */
+/* Styles for card-item, linked, selected are handled by the general .card-item rules */
+#linking-status {
+	margin-top: 15px;
+	text-align: center;
+	font-weight: bold;
+	color: #4a6ea9; /* Blue for status */
+}
+
+/* --- Styling voor de RPS Tiebreaker UI --- */
+
+#rps-tiebreaker-ui {
+	background-color: #fffbeb; /* Licht geelachtig perkament, anders dan hoofdpanelen */
+	border: 2px dashed #b8a088; /* Bruinige gestippelde rand */
+	border-radius: 5px;
+	padding: 20px 25px; /* Meer padding */
+	text-align: center;
+	margin-top: 10px; /* Ruimte boven */
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtiele schaduw */
+}
+
+#rps-tiebreaker-ui h3 {
+	color: #8b4513; /* Saddle Brown / Donker Hout */
+	font-family: "Cinzel", serif;
+	margin-bottom: 10px;
+	font-size: 1.4em; /* Groter */
+	border-bottom: none; /* Geen standaard panel border */
+	letter-spacing: 1px;
+	display: flex; /* Centreer iconen en tekst */
+	justify-content: center;
+	align-items: center;
+	gap: 15px;
+}
+#rps-tiebreaker-ui h3 .panel-icon {
+	font-size: 1.1em; /* Iets groter icoon */
+	opacity: 0.7;
+}
+
+#rps-tiebreaker-ui p {
+	color: #6b4f3f; /* Consistent brown */
+	margin-bottom: 15px;
+	font-size: 1em; /* Iets groter voor duidelijkheid */
+}
+
+#rps-instruction {
+	font-weight: bold;
+	min-height: 1.5em; /* Zorg voor ruimte */
+	color: #5a3d2b; /* Donkerste bruin */
+	font-size: 1.05em;
+}
+
+#rps-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 25px; /* Meer ruimte tussen knoppen */
+	margin: 25px 0; /* Meer verticale ruimte */
+}
+
+.rps-choice-btn {
+	/* Gebruik .action-button basis, maar pas aan */
+	min-width: 80px; /* Vierkanter maken */
+	max-width: 80px;
+	min-height: 70px;
+	padding: 10px; /* Minder padding voor icon focus */
+	font-size: 2.2em; /* GROTERE iconen */
+	line-height: 1; /* Zorgt dat icoon centreert */
+	display: flex; /* Centreer icoon */
+	justify-content: center;
+	align-items: center;
+	/* Optioneel: Override achtergrond voor RPS knoppen? */
+	/* background-color: #4a6ea9; */
+	/* border-color: #3a5a8c; */
+	/* border-bottom-width: 4px; */ /* Dikkere onderrand */
+}
+
+/* Actieve staat voor RPS knoppen (subtieler) */
+.rps-choice-btn:active:not(:disabled) {
+	transform: translateY(2px) scale(0.98); /* Iets meer indrukken */
+	border-bottom-width: 2px; /* Rand wordt 'ingedrukt' */
+}
+
+#rps-result {
+	margin-top: 20px;
+	font-style: normal; /* Niet cursief standaard */
+	min-height: 45px;
+	font-size: 1.1em;
+	border-top: 1px solid #d3c0a5; /* Perkament lijn boven resultaat */
+	padding-top: 15px;
+}
+
+/* Kleuren voor RPS resultaat (hergebruik van vorige code) */
+#rps-result .rps-choice-p1 {
+	color: var(--pawn-base-color, #a91414); /* Gebruik P1 kleur */
+	font-weight: bold;
+	margin: 0 5px;
+}
+#rps-result .rps-choice-p2 {
+	color: var(--pawn-base-color, #1f3a93); /* Gebruik P2 kleur */
+	font-weight: bold;
+	margin: 0 5px;
+}
+#rps-result .rps-outcome {
+	display: block; /* Zet uitkomst op nieuwe regel */
+	margin-top: 8px;
+	font-weight: bold;
+	font-family: "Cinzel", serif; /* Thematisch font */
+	letter-spacing: 0.5px;
+}
+#rps-result .rps-outcome-win {
+	color: #27ae60;
+} /* Green */
+#rps-result .rps-outcome-lose {
+	color: #d35400;
+} /* Orange/Brown */
+#rps-result .rps-outcome-draw {
+	color: #7f8c8d;
+} /* Grey */
+
+/* --- Kolom 3: Sidebar --- */
+#ui-sidebar {
+	width: 280px;
+	flex-shrink: 0;
+	height: calc(600px + 190px + 15px); /* Match other column height */
+	max-height: 80vh;
+	order: 3;
+}
+#game-info-panel {
+	border-bottom: 1px solid #bda88e;
+	padding-bottom: 15px;
+	margin-bottom: 15px;
+}
+#player-info {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 10px;
+}
+#player-indicator {
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	border: 1px solid rgba(0, 0, 0, 0.3);
+}
+#player-indicator.p1-indicator {
+	background-color: #c0392b;
+} /* Player 1 Red */
+#player-indicator.p2-indicator {
+	background-color: #2980b9;
+} /* Player 2 Blue */
+#action-ui h3 {
+	margin-top: 15px;
+}
+#selected-pawn-info {
+	background-color: rgba(0, 0, 0, 0.05);
+	padding: 8px;
+	border-radius: 3px;
+	min-height: 40px;
+	margin-bottom: 10px;
+	font-size: 0.9em;
+}
+#action-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+/* --- Buttons --- */
+.action-button {
+	font-family: "Cinzel", serif;
+	background-color: #34495e; /* Dark Slate Blue */
+	color: #ecf0f1; /* Light Gray/Silver */
+	border: 1px solid #2c3e50;
+	border-bottom-width: 3px;
+	border-radius: 4px;
+	padding: 10px 15px;
+	font-size: 0.95em;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	display: inline-flex; /* Align icon and text */
+	align-items: center;
+	gap: 8px;
+	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15);
+}
+.action-button:hover:not(:disabled) {
+	background-color: #4a6ea9; /* Brighter Blue */
+	border-color: #3a5a8c;
+	box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+	transform: translateY(-1px);
+}
+.action-button:active:not(:disabled) {
+	background-color: #2c3e50;
+	border-color: #1f3a93;
+	transform: translateY(1px);
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+.action-button:disabled {
+	background-color: #7f8c8d; /* Gray */
+	border-color: #6c7a7d;
+	color: #bdc3c7;
+	cursor: not-allowed;
+	opacity: 0.7;
+}
+
+.action-button.confirm-button {
+	background-color: #27ae60; /* Green */
+	border-color: #1f8b4c;
+	width: 100%; /* Make confirm button full width */
+	justify-content: center;
+}
+.action-button.confirm-button:hover:not(:disabled) {
+	background-color: #2ecc71;
+	border-color: #27ae60;
+}
+.action-button.confirm-button:active:not(:disabled) {
+	background-color: #1f8b4c;
+}
+
+.action-button.secondary-button {
+	background-color: #95a5a6; /* Gray */
+	border-color: #7f8c8d;
+	color: #34495e;
+}
+.action-button.secondary-button:hover:not(:disabled) {
+	background-color: #bdc3c7;
+	border-color: #95a5a6;
+}
+.action-button.secondary-button:active:not(:disabled) {
+	background-color: #7f8c8d;
+}
+
+/* --- Spinner --- */
+.spinner {
+	border: 4px solid rgba(139, 105, 78, 0.2); /* Light wood */
+	border-top: 4px solid #8b694e; /* Dark wood */
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	animation: spin 1.2s linear infinite;
+	margin: 20px auto;
+}
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+/* --- Toast Notification --- */
+#toast-notification {
+	position: fixed;
+	bottom: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: rgba(44, 62, 80, 0.9); /* Dark Blue */
+	color: #ecf0f1; /* Light Gray */
+	padding: 12px 25px;
+	border-radius: 4px;
+	border: 1px solid #f1c40f; /* Gold border */
+	z-index: 1000;
+	transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bounce effect */
+	opacity: 0;
+	visibility: hidden;
+	font-size: 0.95em;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+#toast-notification.toast-visible {
+	opacity: 1;
+	visibility: visible;
+	bottom: 30px; /* Move up slightly when visible */
+}
+#toast-notification.toast-hidden {
+	opacity: 0;
+	visibility: hidden;
+	bottom: 0px;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 1200px) {
+	.game-area {
+		/* Allow columns to potentially stack or change order */
+		/* Example: Move chat below board? Or sidebar below? */
+		justify-content: space-around; /* Adjust spacing */
+	}
+	#chat-panel,
+	#ui-sidebar {
+		width: 250px; /* Slightly smaller side columns */
+	}
+	.canvas-placeholder,
+	#card-ui-area {
+		width: 500px; /* Smaller board */
+	}
+	.canvas-placeholder {
+		height: 500px;
+	}
+	#chat-panel,
+	#ui-sidebar {
+		height: calc(500px + 190px + 15px);
+	}
+}
+
+@media (max-width: 992px) {
+	.game-area {
+		flex-direction: column; /* Stack columns */
+		align-items: center; /* Center stack */
+	}
+	#chat-panel,
+	#ui-sidebar,
+	.board-and-cards-area {
+		width: 90%; /* Make columns wider when stacked */
+		max-width: 600px;
+		height: auto; /* Auto height */
+		max-height: none;
+		margin-bottom: 20px;
+		order: 0; /* Reset order */
+	}
+	.board-and-cards-area {
+		order: 1;
+	} /* Board in middle */
+	#chat-panel {
+		order: 2;
+	}
+	#ui-sidebar {
+		order: 3;
+	}
+	.canvas-placeholder,
+	#card-ui-area {
+		width: 100%;
+	}
+	.canvas-placeholder {
+		height: 450px;
+	} /* Adjust canvas height */
+}
+
+@media (max-width: 768px) {
+	.main-title-banner h1 {
+		font-size: 1.2em;
+	}
+	.card-input-grid {
+		grid-template-columns: 1fr;
+	} /* Stack card inputs */
+	.action-button {
+		padding: 8px 12px;
+		font-size: 0.9em;
+	}
+}
+
+</final_file_content>
+
+IMPORTANT: For any future changes to this file, use the final_file_content shown above as your reference. This content reflects the current state of the file, including any auto-formatting (e.g., if you used single quotes but the formatter converted them to double quotes). Always base your SEARCH/REPLACE operations on this final version to ensure accuracy.
+
+<environment_details>
+# VSCode Visible Files
+public/test.css
+
+# VSCode Open Tabs
+public/test.html
+public/test.css
+
+# Current Time
+4/14/2025, 12:52:51 PM (Europe/Amsterdam, UTC+2:00)
+# Context Window Usage
+380,170 / 1,048.576K tokens used (36%)
+
+# Current Mode
+ACT MODE
+</environment_details>

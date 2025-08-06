@@ -1,0 +1,542 @@
+// --- START OF FILE public/js/game-classes.js ---
+
+class Pawn {
+  constructor(id, player, gridX, gridY) {
+    this.id = id;
+    this.player = player;
+    this.gridX = gridX;
+    this.gridY = gridY;
+    this.pixiObject = new PIXI.Container();
+    this.graphics = null; // Main pawn visual (Sprite or Graphics)
+
+    // --- Stats Display Elements (Directly on Pawn) ---
+    this.hpText = null;
+    this.staminaText = null;
+    this.attackText = null;
+    // --- Bar Display Elements ---
+    this.staminaBarContainer = null;
+    this.hpBarContainer = null;
+    this.staminaBars = [];
+    this.hpBars = [];
+    // --- Combination Icon ---
+    this.combinationIconSprite = null; // Re-added
+
+    this.isActive = false;
+    this.currentHP = null;
+    this.linkedCard = null;
+    this.hasActedThisCycle = false;
+    this.remainingStamina = null;
+  }
+
+  createVisual() {
+    const radius = CELL_SIZE * 0.4;
+    const STROKE_THICKNESS = 2;
+
+    // --- Constants for stats display ---
+    const STATS_FONT_SIZE = 10;
+    const STATS_TEXT_COLOR = 0xFFFFFF;
+    const STATS_TEXT_STROKE = 0x000000;
+    const STATS_TEXT_STROKE_THICKNESS = 2.5;
+    const STATS_PADDING = 2; // Padding from the edge
+
+    // --- Constants for Combination Icon ---
+    const CENTRAL_ICON_DISPLAY_SIZE = CELL_SIZE * 0.55;
+
+    // Shadow for hover effect
+    this.shadow = new PIXI.Graphics();
+    this.shadow.beginFill(0x000000, 0.3);
+    this.shadow.drawEllipse(0, radius * 0.8, radius * 0.8, radius * 0.3);
+    this.shadow.endFill();
+    this.shadow.visible = false;
+    this.shadow.alpha = 0;
+    this.pixiObject.addChild(this.shadow);
+
+    // --- Main Pawn Sprite ---
+    const textureAlias = this.player === PLAYER_1 ? 'p1_piece' : 'p2_piece';
+    const texture = ICON_TEXTURES[textureAlias];
+    if (!texture) {
+      console.error(`!!! Texture not found for pawn: ${textureAlias}. Falling back to circle.`);
+      this.graphics = new PIXI.Graphics();
+      const color = this.player === PLAYER_1 ? COLORS.player1 : COLORS.player2;
+      this.graphics.beginFill(color);
+      this.graphics.lineStyle(1, 0x000000, 0.3);
+      this.graphics.drawCircle(0, 0, radius);
+      this.graphics.endFill();
+    } else {
+      this.graphics = new PIXI.Sprite(texture);
+      this.graphics.anchor.set(0.5);
+      const spriteScale = (CELL_SIZE * 0.8) / Math.max(texture.width, texture.height);
+      this.graphics.scale.set(spriteScale);
+    }
+    this.pixiObject.addChild(this.graphics);
+
+    // --- Central Combination Icon Sprite (Re-added) ---
+    this.combinationIconSprite = new PIXI.Sprite();
+    this.combinationIconSprite.anchor.set(0.5);
+    this.combinationIconSprite.width = CENTRAL_ICON_DISPLAY_SIZE;
+    this.combinationIconSprite.height = CENTRAL_ICON_DISPLAY_SIZE;
+    this.combinationIconSprite.position.set(0, 0);
+    this.combinationIconSprite.visible = false; // Initially hidden
+    this.pixiObject.addChild(this.combinationIconSprite); // Add ON TOP of pawn graphic
+
+    // --- Create Stats Text Objects (Positioned in corners) ---
+    const statsTextStyle = new PIXI.TextStyle({
+      fontFamily: "Arial",
+      fontSize: STATS_FONT_SIZE,
+      fill: STATS_TEXT_COLOR,
+      stroke: STATS_TEXT_STROKE,
+      strokeThickness: STATS_TEXT_STROKE_THICKNESS,
+      align: "left",
+    });
+
+    // HP (Top Left)
+    this.hpText = new PIXI.Text("🛡️ ?", statsTextStyle);
+    this.hpText.anchor.set(0, 0);
+    this.hpText.position.set(-radius + STATS_PADDING, -radius + STATS_PADDING);
+    this.hpText.visible = false;
+    this.pixiObject.addChild(this.hpText);
+
+    // Speed (Bottom Left)
+    this.staminaText = new PIXI.Text("🐎 ?", statsTextStyle);
+    this.staminaText.anchor.set(0, 1);
+    this.staminaText.position.set(-radius + STATS_PADDING, radius - STATS_PADDING);
+    this.staminaText.visible = false;
+    this.pixiObject.addChild(this.staminaText);
+
+    // Attack (Top Right)
+    this.attackText = new PIXI.Text("⚔️ ?", statsTextStyle);
+    this.attackText.anchor.set(1, 0);
+    this.attackText.position.set(radius - STATS_PADDING, -radius + STATS_PADDING);
+    this.attackText.visible = false;
+    this.pixiObject.addChild(this.attackText);
+
+    // --- Create Bar Displays ---
+    this.staminaBarContainer = new PIXI.Container();
+    this.hpBarContainer = new PIXI.Container();
+    this.pixiObject.addChild(this.staminaBarContainer);
+    this.pixiObject.addChild(this.hpBarContainer);
+
+    const BAR_WIDTH = 4;
+    const BAR_HEIGHT = 6;
+    const BAR_SPACING = 2;
+    const TOTAL_STAMINA_BARS = 5; // Changed from 7 to 5
+    const TOTAL_HP_BARS = 5;
+
+    // HP Bar (Left side - switched position)
+    for (let i = 0; i < TOTAL_HP_BARS; i++) {
+        const bar = new PIXI.Graphics();
+        bar.position.set(0, i * (BAR_HEIGHT + BAR_SPACING));
+        this.hpBarContainer.addChild(bar);
+        this.hpBars.push(bar);
+    }
+    this.hpBarContainer.x = -radius - BAR_WIDTH + 1; // Left side
+    this.hpBarContainer.y = -((TOTAL_HP_BARS * (BAR_HEIGHT + BAR_SPACING)) - BAR_SPACING) / 2;
+
+    // Stamina Bar (Right side - switched position)
+    for (let i = 0; i < TOTAL_STAMINA_BARS; i++) {
+        const bar = new PIXI.Graphics();
+        bar.position.set(0, i * (BAR_HEIGHT + BAR_SPACING));
+        this.staminaBarContainer.addChild(bar);
+        this.staminaBars.push(bar);
+    }
+    this.staminaBarContainer.x = radius - 1; // Right side
+    this.staminaBarContainer.y = -((TOTAL_STAMINA_BARS * (BAR_HEIGHT + BAR_SPACING)) - BAR_SPACING) / 2;
+    
+    this.staminaBarContainer.visible = false;
+    this.hpBarContainer.visible = false;
+
+    // --- Create Attack Stats Display (Center Bottom) ---
+    this.attackStatsText = new PIXI.Text("", {
+        fontFamily: "Arial",
+        fontSize: 11,
+        fill: 0xFFFFFF, // White
+        stroke: 0x000000, // Black outline
+        strokeThickness: 2,
+        align: "center"
+    });
+    this.attackStatsText.anchor.set(0.5, 0); // Center horizontally, top vertically
+    this.attackStatsText.position.set(0, radius - 2); // Center bottom of pawn
+    this.attackStatsText.visible = false;
+    this.pixiObject.addChild(this.attackStatsText);
+
+    // --- Position the whole pawn container ---
+    const pixelPos = gridToPixel(this.gridX, this.gridY);
+    this.pixiObject.x = pixelPos.x + CELL_SIZE / 2;
+    this.pixiObject.y = pixelPos.y + CELL_SIZE / 2;
+
+    // --- Interaction Setup ---
+    this.pixiObject.eventMode = "static";
+    this.pixiObject.cursor = CURSOR_POINTER;
+    this.pixiObject.on("pointerdown", (event) => {
+      if (gameState.isAnimating || gameState.currentPhase === "GAME_OVER") return;
+      event.stopPropagation();
+      
+      // Handle physics attack dragging when clicking on ENEMY pawn
+      if (gameState.currentPhase === "AWAITING_ACTION_TARGET" && 
+          gameState.selectedPawn && 
+          gameState.selectedPawn.player === gameState.playerNumber &&
+          this.player !== gameState.playerNumber && // This is an enemy pawn
+          typeof physicsAttackSystem !== 'undefined' &&
+          physicsAttackSystem) {
+        
+        // Check if this enemy is a valid target for the selected pawn
+        const selectedPawn = gameState.selectedPawn;
+        const targets = getAttackTargets(selectedPawn);
+        const isValidTarget = targets.some(t => t.id === this.id);
+        
+        if (isValidTarget) {
+          console.log("Physics attack: Starting drag from enemy pawn:", this.id);
+          console.log("Selected pawn:", selectedPawn.id);
+          
+          const globalPos = event.global;
+          const stagePos = globalToStageCoords(globalPos.x, globalPos.y);
+          
+          // Test: Create a simple red circle at click position to verify graphics work
+          const testGraphics = new PIXI.Graphics();
+          testGraphics.beginFill(0xFF0000, 1);
+          testGraphics.drawCircle(stagePos.x, stagePos.y, 10);
+          testGraphics.endFill();
+          app.stage.addChild(testGraphics);
+          console.log("TEST: Created red circle at stage coords", stagePos.x, stagePos.y);
+          setTimeout(() => {
+            if (testGraphics && !testGraphics.destroyed) {
+              app.stage.removeChild(testGraphics);
+              testGraphics.destroy();
+            }
+          }, 2000);
+          
+          // Start drag from enemy position, attacking pawn is the selected one
+          physicsAttackSystem.startDrag(stagePos.x, stagePos.y, selectedPawn, this);
+          
+          // Set dragging flag on the stage
+          if (app && app.stage) {
+            app.stage.isDraggingAttack = true;
+            app.stage.dragStartPawn = selectedPawn;
+            app.stage.dragTargetPawn = this;
+          }
+          
+          // Prevent normal click handling
+          event.stopPropagation();
+          return;
+        }
+      }
+      
+      // Normal pawn click handling
+      if (typeof onPawnClick === "function") onPawnClick(this);
+    });
+
+    this.pixiObject.on("pointerover", (event) => {
+      if (gameState.isAnimating) return;
+      if (this.player !== gameState.playerNumber && gameState.currentPhase === "AWAITING_ACTION_TARGET") {
+        if (typeof onEnemyPawnHover === "function") onEnemyPawnHover(this);
+      }
+    });
+
+    this.pixiObject.on("pointerout", (event) => {
+      if (gameState.isAnimating) return;
+      if (this.player !== gameState.playerNumber && gameState.currentPhase === "AWAITING_ACTION_TARGET") {
+        if (typeof onEnemyPawnOut === "function") onEnemyPawnOut(this);
+      }
+    });
+    // Add tooltip hover listeners
+    this.pixiObject.on('pointerover', (event) => this.showTooltip(event));
+    this.pixiObject.on('pointerout', () => this.hideTooltip());
+
+
+    // --- Add to stage ---
+    if (typeof app !== "undefined" && app?.stage) {
+      app.stage.addChild(this.pixiObject);
+    } else {
+      console.error(`Cannot add pawn ${this.id} visual to stage: Pixi app not ready.`);
+    }
+  }
+
+  updateStatsDisplay(card, currentHPToShow = null) {
+    // --- Update Stats Text (Always update content, but hide visibility) ---
+    if (
+      !card ||
+      !this.hpText ||
+      !this.staminaText ||
+      !this.attackText
+    ) {
+      // Ensure text is hidden if no card or text objects
+      if (this.hpText) this.hpText.visible = false;
+      if (this.staminaText) this.staminaText.visible = false;
+      if (this.attackText) this.attackText.visible = false;
+    } else {
+      // Update text content but keep it hidden
+      const hpDisplayVal = currentHPToShow !== null ? currentHPToShow : card.hp;
+      const staminaDisplayVal = this.remainingStamina ?? card.stamina;
+      this.hpText.text = `🛡️ ${hpDisplayVal}`;
+      this.staminaText.text = `🐎 ${staminaDisplayVal}`;
+      this.attackText.text = `⚔️ ${card.attack}`;
+      // Hide stats text
+      this.hpText.visible = false;
+    if (this.staminaText) this.staminaText.visible = false;
+      this.attackText.visible = false;
+    }
+
+    // --- Update Central Combination Icon ---
+    if (card && this.combinationIconSprite) {
+      const statKey = `h${card.hp}_s${card.stamina}_a${card.attack}`;
+      const iconAlias = STAT_COMBINATION_TO_ICON_ALIAS[statKey];
+      if (iconAlias) {
+        const texture = ICON_TEXTURES[iconAlias];
+        if (texture) {
+          this.combinationIconSprite.texture = texture;
+          this.combinationIconSprite.visible = true; // Show combo icon
+          this.combinationIconSprite.alpha = 1; // Set icon opacity to 30% as requested
+          // *** KEEP text stats visible ***
+          // if(this.hpText) this.hpText.visible = false; // Don't hide
+          // if(this.speedText) this.speedText.visible = false; // Don't hide
+          // if(this.attackText) this.attackText.visible = false; // Don't hide
+        } else {
+          // Texture not found, hide combo icon, text stats remain visible (set above)
+          this.combinationIconSprite.visible = false;
+        }
+      } else {
+        // No alias found, hide combo icon, text stats remain visible (set above)
+        this.combinationIconSprite.visible = false;
+      }
+    } else {
+      // Hide combo icon if no card or sprite doesn't exist
+      if (this.combinationIconSprite) this.combinationIconSprite.visible = false;
+    }
+
+    // Set logical HP if not already set
+    if (this.currentHP === null && card?.hp) {
+      this.currentHP = card.hp;
+    }
+    this.updateBars();
+  }
+
+
+  hideStatsDisplay() {
+    // Hide text stats and combo icon
+    if (this.hpText) this.hpText.visible = false;
+    if (this.staminaText) this.staminaText.visible = false;
+    if (this.attackText) this.attackText.visible = false;
+    if (this.combinationIconSprite) this.combinationIconSprite.visible = false;
+    this.currentHP = null; // Reset logical HP
+  }
+
+  setHighlight(highlight = true) {
+    if (!this.graphics) return; // Check if graphics/sprite exists
+
+    // Use tint for highlighting sprites, revert border for fallback circles
+    if (this.graphics instanceof PIXI.Sprite) {
+      this.graphics.tint = highlight ? 0xFFFF00 : 0xFFFFFF; // Yellow tint for highlight, white otherwise
+    } else if (this.graphics instanceof PIXI.Graphics) {
+      // Fallback for circle if texture failed
+      this.graphics.clear();
+      if (highlight) {
+        this.graphics.lineStyle(3, COLORS.activeHighlight, 1);
+      } else {
+        this.graphics.lineStyle(1, 0x000000, 0.3);
+      }
+      const color = this.player === PLAYER_1 ? COLORS.player1 : COLORS.player2;
+      const radius = CELL_SIZE * 0.4;
+      this.graphics.beginFill(color);
+      this.graphics.drawCircle(0, 0, radius);
+      this.graphics.endFill();
+    }
+  }
+
+
+  updatePosition(newGridX, newGridY) {
+    this.gridX = newGridX;
+    this.gridY = newGridY;
+    if (this.pixiObject) {
+      const p = gridToPixel(this.gridX, this.gridY);
+      this.pixiObject.x = p.x + CELL_SIZE / 2;
+      this.pixiObject.y = p.y + CELL_SIZE / 2;
+    }
+  }
+
+  animateMoveTo(newGridX, newGridY, onComplete = null) {
+    if (!this.pixiObject || this.pixiObject.destroyed) {
+      if (onComplete) onComplete();
+      return;
+    }
+    const startX = this.pixiObject.x;
+    const startY = this.pixiObject.y;
+    const targetPos = gridToPixel(newGridX, newGridY);
+    const targetX = targetPos.x + CELL_SIZE / 2;
+    const targetY = targetPos.y + CELL_SIZE / 2;
+    this.gridX = newGridX;
+    this.gridY = newGridY;
+    if (startX === targetX && startY === targetY) {
+      if (onComplete) onComplete();
+      return;
+    }
+    gameState.isAnimating = true;
+    const duration = 300;
+    const startTime = Date.now();
+    const animate = () => {
+      if (!this.pixiObject || this.pixiObject.destroyed) {
+        gameState.isAnimating = false;
+        if (onComplete) onComplete();
+        return;
+      }
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      this.pixiObject.x = startX + (targetX - startX) * easeProgress;
+      this.pixiObject.y = startY + (targetY - startY) * easeProgress;
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        this.pixiObject.x = targetX;
+        this.pixiObject.y = targetY;
+        gameState.isAnimating = false;
+        if (onComplete) onComplete();
+      }
+    };
+    requestAnimationFrame(animate);
+  }
+
+  destroyVisual() {
+    if (this.pixiObject && !this.pixiObject.destroyed) {
+      if (this.pixiObject.parent) {
+        this.pixiObject.parent.removeChild(this.pixiObject);
+      }
+      this.pixiObject.destroy({ children: true });
+      this.pixiObject = null;
+      this.graphics = null;
+      // Nullify new stats properties
+      this.hpText = null;
+      this.staminaText = null;
+      this.attackText = null;
+      this.combinationIconSprite = null; // Nullify combo icon too
+    }
+  }
+
+  updateBars() {
+    if (!this.isActive || !this.linkedCard) {
+        this.staminaBarContainer.visible = false;
+        this.hpBarContainer.visible = false;
+        if (this.attackStatsText) this.attackStatsText.visible = false;
+        return;
+    }
+
+    this.staminaBarContainer.visible = true;
+    this.hpBarContainer.visible = true;
+    
+    // Show attack stats in center bottom
+    if (this.attackStatsText && this.linkedCard) {
+        this.attackStatsText.text = this.linkedCard.attack || "0";
+        this.attackStatsText.visible = true;
+    }
+
+    const BAR_WIDTH = 4;
+    const BAR_HEIGHT = 6;
+    const DEPLETED_COLOR = 0x333333; // Dark Grey
+    const HP_COLOR = 0xFF4500; // Red/Pink
+    const STAMINA_GREEN_COLOR = 0x00FF00;
+    const STAMINA_RED_COLOR = 0xFF0000;
+
+    // Update HP Bar
+    const maxHP = this.linkedCard.hp || 5;
+    for (let i = 0; i < this.hpBars.length; i++) {
+        const bar = this.hpBars[i];
+        bar.clear();
+        const color = (this.hpBars.length - i) <= this.currentHP ? HP_COLOR : DEPLETED_COLOR;
+        bar.beginFill(color);
+        bar.drawRect(0, 0, BAR_WIDTH, BAR_HEIGHT);
+        bar.endFill();
+    }
+
+    // Update Stamina Bar with gradient colors
+    for (let i = 0; i < this.staminaBars.length; i++) {
+        const bar = this.staminaBars[i];
+        bar.clear();
+        let color = DEPLETED_COLOR;
+        
+        if ((this.staminaBars.length - i) <= this.remainingStamina) {
+            // Calculate gradient based on remaining stamina
+            // 1 stamina = red, 5 stamina = green, with colors in between
+            const staminaLevel = this.remainingStamina;
+            if (staminaLevel === 1) {
+                color = 0xFF0000; // Red
+            } else if (staminaLevel === 2) {
+                color = 0xFF8000; // Orange
+            } else if (staminaLevel === 3) {
+                color = 0xFFFF00; // Yellow
+            } else if (staminaLevel === 4) {
+                color = 0x80FF00; // Yellow-Green
+            } else if (staminaLevel === 5) {
+                color = 0x00FF00; // Green
+            } else {
+                color = 0x00FF00; // Default to green for higher values
+            }
+        }
+        
+        bar.beginFill(color);
+        bar.drawRect(0, 0, BAR_WIDTH, BAR_HEIGHT);
+        bar.endFill();
+    }
+  }
+
+  // --- Tooltip Methods ---
+  showTooltip(event) {
+    const tooltipElement = document.getElementById('pawn-tooltip');
+    if (!tooltipElement || !this.isActive || !this.linkedCard) {
+      this.hideTooltip(); // Ensure it's hidden if conditions aren't met
+      return;
+    }
+
+    // 1. Set content
+    const hp = this.currentHP ?? this.linkedCard.hp ?? '?';
+    const stamina = this.remainingStamina ?? this.linkedCard.stamina ?? '?';
+    const attack = this.linkedCard.attack ?? '?';
+    tooltipElement.innerHTML = `🛡️ ${hp} | 🐎 ${stamina} | ⚔️ ${attack}`;
+
+    // Ensure tooltip is a direct child of body for reliable fixed positioning
+    if (tooltipElement.parentElement !== document.body) {
+      document.body.appendChild(tooltipElement);
+      console.log("Tooltip appended to body."); // Log if moved
+    }
+
+    // 2. Make it measurable but hidden
+    tooltipElement.style.visibility = 'hidden';
+    tooltipElement.style.display = 'block';
+
+    // 3. Get dimensions NOW
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+
+    // Position tooltip above the pawn sprite
+    const canvasRect = app.view.getBoundingClientRect(); // Get canvas position in viewport
+    const pawnLocalX = this.pixiObject.x; // Pawn X relative to Pixi stage origin
+    const pawnLocalY = this.pixiObject.y; // Pawn Y relative to Pixi stage origin
+
+    // 4. Calculate position (using viewport coordinates for position:fixed)
+    const pawnCenterX_Viewport = canvasRect.left + pawnLocalX; // Pawn center X relative to viewport
+    const pawnCenterY_Viewport = canvasRect.top + pawnLocalY; // Pawn center Y relative to viewport
+
+    // Calculate tooltip's top-left corner in viewport coordinates
+    const tooltipX = pawnCenterX_Viewport - (tooltipRect.width / 2); // Center horizontally
+    const pointerHeight = 5; // Height of the ::after pseudo-element triangle
+    const verticalBuffer = 5; // Small buffer above the pawn's visual top edge
+    const radius = CELL_SIZE * 0.4; // Approximate radius used in createVisual
+    const pawnTopEdge_Viewport = pawnCenterY_Viewport - radius; // Estimate pawn's visual top edge Y
+    // Position tooltip's top edge above the pawn's estimated top edge
+    const tooltipY = pawnTopEdge_Viewport - tooltipRect.height - pointerHeight - verticalBuffer;
+
+    // 5. Set position using fixed positioning (relative to viewport)
+    tooltipElement.style.left = `${Math.round(tooltipX)}px`;
+    tooltipElement.style.top = `${Math.round(tooltipY)}px`;
+
+    // 6. Make visible
+    tooltipElement.style.visibility = 'visible';
+    // display: 'block' is already set
+  }
+
+  hideTooltip() {
+    const tooltipElement = document.getElementById('pawn-tooltip');
+    if (tooltipElement) {
+      tooltipElement.style.display = 'none';
+      tooltipElement.style.visibility = 'visible'; // Reset visibility when hiding
+    }
+  }
+  // --- End Tooltip Methods ---
+}

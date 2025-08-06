@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Napoleonic Fantasy UI Test</title>
+    <link rel="stylesheet" href="test.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English+SC&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-title-banner">
+        <h1>Fog of War: Empires & Arcana</h1>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen active">
+        <div class="game-area">
+
+            <!-- Kolom 1: Chat Panel -->
+            <div id="chat-panel" class="ui-panel">
+                <h3><span class="panel-icon">📜</span> War Council Chat</h3>
+                <div id="chat-messages">
+                    <div class="chat-message"><span class="player-name p1">General Dubois (P1):</span> Ready the griffon
+                        riders!</div>
+                    <div class="chat-message"><span class="player-name p2">Baron von Hess (P2):</span> My cannons are
+                        enchanted and aimed.</div>
+                    <div class="chat-message"><span class="player-name p1">General Dubois (P1):</span> Let the arcane
+                        barrage commence!</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Issue Command..." />
+                    <button id="send-chat-btn" class="action-button"><span class="btn-icon">✉️</span> Send</button>
+                </div>
+            </div>
+
+            <!-- Kolom 2: Bord + Kaart UI eronder -->
+            <div class="board-and-cards-area">
+                <!-- NIEUWE WRAPPER VOOR ACHTERGROND -->
+                <div id="board-background-wrapper">
+                    <div id="game-container">
+                        <!-- Grid Cell Backgrounds (Havens) - NU ALS DIVS -->
+                        <!-- P1 Target Havens (Boven) -->
+                        <div class="haven-cell player-1-haven" style="grid-area: 1 / 5 / 2 / 6;"></div>
+                        <!-- y=0, x=4 -->
+                        <div class="haven-cell player-1-haven" style="grid-area: 1 / 6 / 2 / 7;"></div>
+                        <!-- y=0, x=5 -->
+                        <div class="haven-cell player-1-haven" style="grid-area: 1 / 7 / 2 / 8;"></div>
+                        <!-- y=0, x=6 -->
+                        <div class="haven-cell player-1-haven" style="grid-area: 1 / 1 / 2 / 2;"></div>
+                        <!-- y=0, x=0 -->
+                        <div class="haven-cell player-1-haven" style="grid-area: 1 / 11 / 2 / 12;"></div>
+                        <!-- y=0, x=10 -->
+
+                        <!-- P2 Target Havens (Onder) -->
+                        <div class="haven-cell player-2-haven" style="grid-area: 11 / 5 / 12 / 6;"></div>
+                        <!-- y=10, x=4 -->
+                        <div class="haven-cell player-2-haven" style="grid-area: 11 / 6 / 12 / 7;"></div>
+                        <!-- y=10, x=5 -->
+                        <div class="haven-cell player-2-haven" style="grid-area: 11 / 7 / 12 / 8;"></div>
+                        <!-- y=10, x=6 -->
+                        <div class="haven-cell player-2-haven" style="grid-area: 11 / 1 / 12 / 2;"></div>
+                        <!-- y=10, x=0 -->
+                        <div class="haven-cell player-2-haven" style="grid-area: 11 / 11 / 12 / 12;"></div>
+                        <!-- y=10, x=10 -->
+
+
+                        <!-- Voorbeeld Pionnen (P1 = Rood, P2 = Blauw) -->
+                        <!-- Plaatsing is 1-based index voor grid-row/column -->
+
+                        <!-- Player 2 (Blauw) - Bovenste rijen (Voorbeeld met Stats) -->
+                        <div class="test-pawn player-2" style="grid-row: 1; grid-column: 2;">
+                            <div class="pawn-stats-container">
+                                <div class="stat hp-stat">🛡️<span class="value">4</span></div>
+                                <div class="stat speed-stat">🐎<span class="value">1</span></div>
+                                <div class="stat attack-stat">⚔️<span class="value">2</span></div>
+                            </div>
+                        </div>
+                        <div class="test-pawn player-2" style="grid-row: 1; grid-column: 6;">
+                            <div class="pawn-stats-container">
+                                <div class="stat hp-stat">🛡️<span class="value">1</span></div>
+                                <div class="stat speed-stat">🐎<span class="value">5</span></div>
+                                <div class="stat attack-stat">⚔️<span class="value">1</span></div>
+                            </div>
+                        </div>
+                        <div class="test-pawn player-2" style="grid-row: 2; grid-column: 8;">
+                            <!-- Verplaatst naar rij 2 voor zichtbaarheid -->
+                            <div class="pawn-stats-container">
+                                <div class="stat hp-stat">🛡️<span class="value">2</span></div>
+                                <div class="stat speed-stat">🐎<span class="value">1</span></div>
+                                <div class="stat attack-stat">⚔️<span class="value">4</span></div>
+                            </div>
+                        </div>
+                        <!-- TODO: Add stats containers to other P2 pawns -->
+                        <div class="test-pawn player-2" style="grid-row: 1; grid-column: 10;"></div>
+                        <div class="test-pawn player-2" style="grid-row: 2; grid-column: 4;"></div>
+                        <div class="test-pawn player-2" style="grid-row: 2; grid-column: 11;"></div>
+
+
+                        <!-- Player 1 (Rood) - Onderste rijen (Voorbeeld met Stats) -->
+                        <div class="test-pawn player-1" style="grid-row: 10; grid-column: 1;">
+                            <div class="pawn-stats-container">
+                                <div class="stat hp-stat">🛡️<span class="value">3</span></div>
+                                <div class="stat speed-stat">🐎<span class="value">2</span></div>
+                                <div class="stat attack-stat">⚔️<span class="value">2</span></div>
+                            </div>
+                        </div>
+                        <div class="test-pawn player-1" style="grid-row: 10; grid-column: 5;">
+                            <div class="pawn-stats-container">
+                                <div class="stat hp-stat">🛡️<span class="value">2</span></div>
+                                <div class="stat speed-stat">🐎<span class="value">3</span></div>
+                                <div class="stat attack-stat">⚔️<span class="value">2</span></div>
+                            </div>
+                        </div>
+                        <div class="test-pawn player-1" style="grid-row: 11; grid-column: 9;">
+                            <!-- Verplaatst naar rij 11 -->
+                            <div class="pawn-stats-container">
+                                <div class="stat hp-stat">🛡️<span class="value">1</span></div>
+                                <div class="stat speed-stat">🐎<span class="value">1</span></div>
+                                <div class="stat attack-stat">⚔️<span class="value">5</span></div>
+                            </div>
+                        </div>
+                        <!-- TODO: Add stats containers to other P1 pawns -->
+                        <div class="test-pawn player-1" style="grid-row: 10; grid-column: 9;"></div>
+                        <div class="test-pawn player-1" style="grid-row: 11; grid-column: 3;"></div>
+                        <div class="test-pawn player-1" style="grid-row: 11; grid-column: 7;"></div>
+                        <div class="test-pawn player-1" style="grid-row: 11; grid-column: 11;"></div>
+
+                    </div> <!-- Einde #game-container -->
+                </div> <!-- Einde #board-background-wrapper -->
+
+                <div id="card-ui-area" class="ui-panel">
+                    <!-- Hieronder komen de verschillende kaart-UI staten -->
+                    <!-- Alle panelen nu zichtbaar voor test -->
+
+                    <div id="opponent-waiting" style="display: block;"> <!-- Zichtbaar -->
+                        <h3>Awaiting Opponent's Strategy</h3>
+                        <p>Hold position...</p>
+                        <div class="spinner"></div>
+                    </div>
+
+                    <div id="card-definition-ui" style="display: block;"> <!-- Zichtbaar -->
+                        <h3><span class="panel-icon">✨</span> Devise Tactics - Round <span id="def-round-num">1</span>
+                            (P<span id="def-player-num">1</span>)</h3>
+                        <div id="card-presets">
+                            <h4>Standard Formations:</h4>
+                            <div class="preset-buttons-container">
+                                <button id="preset-speedy" class="preset-button">Swift Scouts (1/5/1)</button>
+                                <button id="preset-attackers" class="preset-button">Shock Troops (3/1/3)</button>
+                                <button id="preset-defenders" class="preset-button">Iron Guard (4/1/2)</button>
+                            </div>
+                        </div>
+                        <p>Assign 7 points total (min 1 each) per unit.</p>
+                        <div class="card-input-grid">
+                            <div class="card-inputs">
+                                <h4>Unit 1</h4>
+                                <label>Resilience (HP): <input type="number" id="card1-hp" min="1" max="5"
+                                        value="3" /></label>
+                                <label>March (Speed): <input type="number" id="card1-speed" min="1" max="5"
+                                        value="2" /></label>
+                                <label>Might (Attack): <input type="number" id="card1-attack" min="1" max="5"
+                                        value="2" /></label>
+                                <span class="card-sum" id="card1-sum">Total: 7</span>
+                            </div>
+                            <div class="card-inputs">
+                                <h4>Unit 2</h4>
+                                <label>Resilience (HP): <input type="number" id="card2-hp" min="1" max="5"
+                                        value="2" /></label>
+                                <label>March (Speed): <input type="number" id="card2-speed" min="1" max="5"
+                                        value="3" /></label>
+                                <label>Might (Attack): <input type="number" id="card2-attack" min="1" max="5"
+                                        value="2" /></label>
+                                <span class="card-sum" id="card2-sum">Total: 7</span>
+                            </div>
+                            <div class="card-inputs">
+                                <h4>Unit 3</h4>
+                                <label>Resilience (HP): <input type="number" id="card3-hp" min="1" max="5"
+                                        value="1" /></label>
+                                <label>March (Speed): <input type="number" id="card3-speed" min="1" max="5"
+                                        value="1" /></label>
+                                <label>Might (Attack): <input type="number" id="card3-attack" min="1" max="5"
+                                        value="5" /></label>
+                                <span class="card-sum" id="card3-sum">Total: 7</span>
+                            </div>
+                        </div>
+                        <button id="confirm-cards-btn" class="action-button confirm-button"><span
+                                class="btn-icon">✔️</span> Finalize Orders</button>
+                    </div>
+
+                    <div id="card-reveal-ui" style="display: block;"> <!-- Zichtbaar -->
+                        <h3><span class="panel-icon">👁️</span> Orders Revealed - Round <span
+                                id="reveal-round-num">1</span></h3>
+                        <div class="players-cards">
+                            <div class="player-cards-section">
+                                <h4>Your Orders:</h4>
+                                <div id="your-revealed-cards" class="revealed-cards">
+                                    <!-- Player 1 Card Examples -->
+                                    <div class="card-item player-1">
+                                        <strong class="card-title">Unit 1</strong>
+                                        <div class="card-stats">
+                                            <span><span class="icon hp-icon">🛡️</span> <span
+                                                    class="value">3</span></span>
+                                            <span><span class="icon speed-icon">🐎</span> <span
+                                                    class="value">2</span></span>
+                                            <span><span class="icon attack-icon">⚔️</span> <span
+                                                    class="value">2</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="card-item player-1">
+                                        <strong class="card-title">Unit 2</strong>
+                                        <div class="card-stats">
+                                            <span><span class="icon hp-icon">🛡️</span> <span
+                                                    class="value">2</span></span>
+                                            <span><span class="icon speed-icon">🐎</span> <span
+                                                    class="value">3</span></span>
+                                            <span><span class="icon attack-icon">⚔️</span> <span
+                                                    class="value">2</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="card-item player-1">
+                                        <strong class="card-title">Unit 3</strong>
+                                        <div class="card-stats">
+                                            <span><span class="icon hp-icon">🛡️</span> <span
+                                                    class="value">1</span></span>
+                                            <span><span class="icon speed-icon">🐎</span> <span
+                                                    class="value">1</span></span>
+                                            <span><span class="icon attack-icon">⚔️</span> <span
+                                                    class="value">5</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="player-cards-section">
+                                <h4>Opponent's Orders:</h4>
+                                <div id="opponent-revealed-cards" class="revealed-cards">
+                                    <!-- Player 2 Card Examples -->
+                                    <div class="card-item player-2">
+                                        <strong class="card-title">Unit 1</strong>
+                                        <div class="card-stats">
+                                            <span><span class="icon hp-icon">🛡️</span> <span
+                                                    class="value">4</span></span>
+                                            <span><span class="icon speed-icon">🐎</span> <span
+                                                    class="value">1</span></span>
+                                            <span><span class="icon attack-icon">⚔️</span> <span
+                                                    class="value">2</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="card-item player-2">
+                                        <strong class="card-title">Unit 2</strong>
+                                        <div class="card-stats">
+                                            <span><span class="icon hp-icon">🛡️</span> <span
+                                                    class="value">1</span></span>
+                                            <span><span class="icon speed-icon">🐎</span> <span
+                                                    class="value">5</span></span>
+                                            <span><span class="icon attack-icon">⚔️</span> <span
+                                                    class="value">1</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="card-item player-2">
+                                        <strong class="card-title">Unit 3</strong>
+                                        <div class="card-stats">
+                                            <span><span class="icon hp-icon">🛡️</span> <span
+                                                    class="value">2</span></span>
+                                            <span><span class="icon speed-icon">🐎</span> <span
+                                                    class="value">1</span></span>
+                                            <span><span class="icon attack-icon">⚔️</span> <span
+                                                    class="value">4</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="initiative-result">
+                            <h4><span class="panel-icon">⭐</span> Initiative:</h4>
+                            <p>Player <span id="initiative-player">1</span> holds the initiative!</p>
+                            <p id="initiative-reason">(Superior Firepower: 9 vs 7)</p>
+                        </div>
+                    </div>
+
+                    <div id="linking-ui" style="display: block;"> <!-- Zichtbaar -->
+                        <h3><span class="panel-icon">🔗</span> Assign Units - Round <span id="link-round-num">1</span>
+                            (P<span id="link-player-num">1</span>)</h3>
+                        <div id="available-cards-linking">
+                            <h4><span class="panel-icon">🃏</span> Available Units:</h4>
+                            <div class="card-list-container">
+                                <!-- Player 2 Cards (voorbeeld) -->
+                                <div class="card-item player-2 linked"> <!-- Voorbeeld Gelinkt -->
+                                    <strong class="card-title">Opp Unit 1</strong>
+                                    <div class="card-stats">
+                                        <span><span class="icon hp-icon">🛡️</span> <span class="value">4</span></span>
+                                        <span><span class="icon speed-icon">🐎</span> <span
+                                                class="value">1</span></span>
+                                        <span><span class="icon attack-icon">⚔️</span> <span
+                                                class="value">2</span></span>
+                                    </div>
+                                    <div class="linked-overlay">ASSIGNED</div> <!-- Overlay Div -->
+                                </div>
+                                <div class="card-item player-2">
+                                    <strong class="card-title">Opp Unit 2</strong>
+                                    <div class="card-stats">
+                                        <span><span class="icon hp-icon">🛡️</span> <span class="value">1</span></span>
+                                        <span><span class="icon speed-icon">🐎</span> <span
+                                                class="value">5</span></span>
+                                        <span><span class="icon attack-icon">⚔️</span> <span
+                                                class="value">1</span></span>
+                                    </div>
+                                </div>
+                                <div class="card-item player-2">
+                                    <strong class="card-title">Opp Unit 3</strong>
+                                    <div class="card-stats">
+                                        <span><span class="icon hp-icon">🛡️</span> <span class="value">2</span></span>
+                                        <span><span class="icon speed-icon">🐎</span> <span
+                                                class="value">1</span></span>
+                                        <span><span class="icon attack-icon">⚔️</span> <span
+                                                class="value">4</span></span>
+                                    </div>
+                                </div>
+
+                                <!-- Player 1 Cards (voorbeeld) -->
+                                <div class="card-item player-1">
+                                    <strong class="card-title">Your Unit 1</strong>
+                                    <div class="card-stats">
+                                        <span><span class="icon hp-icon">🛡️</span> <span class="value">3</span></span>
+                                        <span><span class="icon speed-icon">🐎</span> <span
+                                                class="value">2</span></span>
+                                        <span><span class="icon attack-icon">⚔️</span> <span
+                                                class="value">2</span></span>
+                                    </div>
+                                </div>
+                                <div class="card-item player-1 card-selected"> <!-- Voorbeeld Geselecteerd -->
+                                    <strong class="card-title">Your Unit 2</strong>
+                                    <div class="card-stats">
+                                        <span><span class="icon hp-icon">🛡️</span> <span class="value">2</span></span>
+                                        <span><span class="icon speed-icon">🐎</span> <span
+                                                class="value">3</span></span>
+                                        <span><span class="icon attack-icon">⚔️</span> <span
+                                                class="value">2</span></span>
+                                    </div>
+                                </div>
+                                <div class="card-item player-1">
+                                    <strong class="card-title">Your Unit 3</strong>
+                                    <div class="card-stats">
+                                        <span><span class="icon hp-icon">🛡️</span> <span class="value">1</span></span>
+                                        <span><span class="icon speed-icon">🐎</span> <span
+                                                class="value">1</span></span>
+                                        <span><span class="icon attack-icon">⚔️</span> <span
+                                                class="value">5</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="linking-status">Select an unassigned unit, then select a regiment on the map.</div>
+                    </div>
+
+                    <div id="rps-tiebreaker-ui" style="display: block;"> <!-- Zichtbaar -->
+                        <h3><span class="panel-icon">⚔️</span> Initiative Duel! <span class="panel-icon">⚔️</span></h3>
+                        <p>Equal tactics measured! Settle the initiative with swift action!</p>
+                        <p id="rps-instruction" style="font-weight: bold;">Choose your Maneuver!</p>
+                        <div id="rps-buttons">
+                            <!-- Knoptekst verwijderd, we gebruiken alleen iconen -->
+                            <button id="rps-rock" class="rps-choice-btn action-button" data-choice="rock"
+                                title="Steadfast Defense (Rock)">🪨</button>
+                            <button id="rps-paper" class="rps-choice-btn action-button" data-choice="paper"
+                                title="Enveloping Formation (Paper)">📜</button> <!-- Scroll ipv papier -->
+                            <button id="rps-scissors" class="rps-choice-btn action-button" data-choice="scissors"
+                                title="Flanking Attack (Scissors)">✂️</button>
+                        </div>
+                        <div id="rps-result">
+                            <!-- Resultaat wordt hier ingevuld -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kolom 3: UI Sidebar (Game Info / Acties) -->
+            <div id="ui-sidebar" class="ui-panel">
+                <div id="game-info-panel">
+                    <h2><span class="panel-icon">🗺️</span> Campaign Status</h2>
+                    <div id="game-status">Phase: TACTICS, P: 1, Cy: 1, R: 1</div>
+                    <div id="room-info">Command Tent: <span id="game-room-code">AZFGHX</span></div>
+                    <div id="player-info">
+                        <div id="player-indicator" class="p1-indicator"></div> <!-- Class added -->
+                        <span>You are General <span id="player-num">1</span> (Red)</span>
+                    </div>
+                    <button id="mute-btn" class="action-button secondary-button"><span class="btn-icon">🔊</span> Mute
+                        Signals</button>
+                </div>
+                <div id="action-ui" style="display: block;"> <!-- Zichtbaar -->
+                    <h3><span class="panel-icon">⚔️</span> Action Phase (P<span id="action-player-num">1</span>)</h3>
+                    <div id="selected-pawn-info">Select a regiment to command.</div>
+                    <div id="action-buttons" style="display: none;">
+                        <button id="move-btn" class="action-button"><span class="btn-icon">🚶</span> March</button>
+                        <button id="attack-btn" class="action-button"><span class="btn-icon">💥</span> Attack</button>
+                        <button id="cancel-action-btn" class="action-button secondary-button"><span
+                                class="btn-icon">❌</span> Cancel</button>
+                    </div>
+                </div>
+                <div id="game-over"
+                    style="display: block; color: #ffcc00; font-weight: bold; text-align: center; margin-top: 20px; font-size: 1.2em; border-top: 1px solid #8a6d3b; padding-top: 15px;">
+                    <!-- Zichtbaar -->
+                    VICTORY!
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast-notification" class="toast-hidden">
+        <div id="toast-message">Dispatch received!</div>
+    </div>
+
+    <!-- Dummy script just to prevent errors if scripts are expected -->
+    <script>
+        console.log("Napoleonic Fantasy UI Test HTML loaded.");
+        // In a real scenario, PIXI, Socket.IO, and game scripts would be here.
+    </script>
+</body>
+
+</html>
