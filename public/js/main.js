@@ -225,11 +225,6 @@ async function initGame() {
         gameState.cycleNumber = gameState.cycleNumber || 1;
         gameState.roundNumber = gameState.roundNumber || 1;
         gameState.currentPlayer = gameState.currentPlayer || 1;
-    } else {
-        console.error("!!! No initial game state found in gameSession! This should not happen if gameStart event worked.");
-        gameState.currentPhase = 'ERROR_NO_STATE'; gameState.cycleNumber = 0; gameState.roundNumber = 0; gameState.currentPlayer = null;
-        alert("Error receiving initial game state from server. Please refresh.");
-        return;
     }
 
     console.log('Initial game state applied:',
