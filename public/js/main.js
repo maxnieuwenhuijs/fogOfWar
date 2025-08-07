@@ -201,6 +201,10 @@ async function initGame() {
     }
 
     // Apply initial game state from the server, captured by the patch - Kan direct
+    console.log('🔍 DEBUG: Checking initialization path...');
+    console.log('🔍 gameSession.initialGameState exists?', !!gameSession.initialGameState);
+    console.log('🔍 Full gameState:', gameState);
+    
     if (gameSession.initialGameState) {
         console.log('Applying initial game state:', gameSession.initialGameState);
         gameState.currentPhase = gameSession.initialGameState.currentPhase;
@@ -214,9 +218,9 @@ async function initGame() {
             gameState.currentPlayer = 1; // Fallback
             console.warn(`Falling back to default currentPlayer: ${gameState.currentPlayer}`);
         }
-    } else if (gameState.singleplayerMode) {
-        // Single player mode - use defaults
-        console.log('Single player mode - using default game state');
+    } else {
+        // Use default game state
+        console.log('Using default game state');
         gameState.currentPhase = gameState.currentPhase || 'SETUP1_DEFINE';
         gameState.cycleNumber = gameState.cycleNumber || 1;
         gameState.roundNumber = gameState.roundNumber || 1;

@@ -25,9 +25,9 @@ class MenuSystem {
                 </div>
                 
                 <div class="menu-buttons">
-                    <button class="menu-button primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Single Player mode temporarily disabled">
+                    <button class="menu-button primary" onclick="menuSystem.showSingleplayerMenu()">
                         <span class="button-icon">⚔️</span>
-                        <span class="button-text">Single Player (Disabled)</span>
+                        <span class="button-text">Single Player</span>
                     </button>
                     
                     <button class="menu-button primary" onclick="menuSystem.showMultiplayerMenu()">
@@ -61,40 +61,9 @@ class MenuSystem {
     }
 
     showSingleplayerMenu() {
-        this.currentMenu = 'singleplayer';
-        this.menuContainer.innerHTML = `
-            <div class="menu-screen singleplayer-menu">
-                <h2 class="menu-title">Single Player Campaign</h2>
-                
-                <div class="difficulty-section">
-                    <h3>Select Difficulty</h3>
-                    <div class="difficulty-buttons">
-                        <button class="difficulty-button" onclick="menuSystem.startSingleplayer('easy')">
-                            <div class="difficulty-icon">🟢</div>
-                            <div class="difficulty-name">Recruit</div>
-                            <div class="difficulty-desc">For new commanders</div>
-                        </button>
-                        
-                        <button class="difficulty-button" onclick="menuSystem.startSingleplayer('medium')">
-                            <div class="difficulty-icon">🟡</div>
-                            <div class="difficulty-name">Veteran</div>
-                            <div class="difficulty-desc">Standard challenge</div>
-                        </button>
-                        
-                        <button class="difficulty-button" onclick="menuSystem.startSingleplayer('hard')">
-                            <div class="difficulty-icon">🔴</div>
-                            <div class="difficulty-name">General</div>
-                            <div class="difficulty-desc">Tactical mastery required</div>
-                        </button>
-                    </div>
-                </div>
-                
-                <button class="menu-button back" onclick="menuSystem.showMainMenu()">
-                    <span class="button-icon">⬅️</span>
-                    <span class="button-text">Back</span>
-                </button>
-            </div>
-        `;
+        // Singleplayer not implemented
+        alert('Singleplayer mode is not available yet. Please create or join a multiplayer game.');
+        this.showMainMenu();
     }
 
     showMultiplayerMenu() {
@@ -276,122 +245,14 @@ class MenuSystem {
         this.showMainMenu();
     }
 
-    startSingleplayer(difficulty) {
-        // Store difficulty setting
-        gameState.singleplayerMode = true;
-        gameState.aiDifficulty = difficulty;
-        
-        // Hide menu
-        this.menuContainer.style.display = 'none';
-        
-        // Initialize single player game
-        this.initSingleplayerGame();
-    }
 
-    initSingleplayerGame() {
-        // Ensure gameState exists
-        if (typeof gameState === 'undefined') {
-            console.error('gameState not defined, waiting...');
-            setTimeout(() => this.initSingleplayerGame(), 100);
-            return;
-        }
-        
-        // FIRST THING: Mark as single player mode to stop other scripts from waiting
-        gameState.singleplayerMode = true;
-        window.gameState = gameState;
-        console.log('🔧 Single player mode flag set early');
-        
-        // Create a mock socket for single player FIRST before anything else
-        if (!window.socket) {
-            window.socket = {
-                emit: function(eventName, data) {
-                    // This will be overridden by singleplayer-adapter
-                    console.log('Mock socket emit (not yet overridden):', eventName, data);
-                },
-                on: function() {},
-                off: function() {},
-                connected: true
-            };
-            console.log('Created mock socket for single player mode');
-        }
-        
-        // Create a mock game session for single player
-        window.gameSession = {
-            playerNumber: 1,
-            roomCode: 'SINGLE',
-            players: {
-                1: { name: 'Player', ready: true },
-                2: { name: 'AI Commander', ready: true }
-            },
-            initialGameState: {
-                currentPhase: 'SETUP1_DEFINE',
-                cycleNumber: 1,
-                roundNumber: 1,
-                currentPlayer: 1
-            }
-        };
-        
-        // Make sure they're available as globals without window prefix
-        if (typeof socket === 'undefined') {
-            globalThis.socket = window.socket;
-        }
-        if (typeof gameSession === 'undefined') {
-            globalThis.gameSession = window.gameSession;
-        }
-        
-        console.log('🔧 Mock gameSession created:', window.gameSession);
-        console.log('🔧 Socket available:', !!window.socket);
-        console.log('🔧 Global check - socket:', typeof socket, 'gameSession:', typeof gameSession);
-        
-        // Set game state flags
-        gameState.singleplayerMode = true;
-        gameState.testMode = false;
-        
-        // Hide all screens first
-        document.getElementById('lobby-screen').classList.remove('active');
-        document.getElementById('waiting-screen').classList.remove('active');
-        document.getElementById('game-lobby-screen').classList.remove('active');
-        
-        // Show game screen
-        document.getElementById('game-screen').classList.add('active');
-        
-        // Hide the stats bar and medal elements that show errors
-        const statsBar = document.querySelector('.game-stats-bar');
-        if (statsBar) statsBar.style.display = 'block';
-        
-        // Update the room code display to show it's single player
-        const roomCodeElements = document.querySelectorAll('#game-room-code, #display-room-code, #lobby-room-code');
-        roomCodeElements.forEach(el => {
-            if (el) el.textContent = 'SINGLE';
-        });
-        
-        // Initialize single player mode BEFORE the game
-        if (typeof initSinglePlayerMode === 'function') {
-            initSinglePlayerMode();
-        }
-        
-        // Start game patches and systems
-        if (typeof window.startGamePatch === 'function') {
-            window.startGamePatch();
-        }
-        if (typeof window.startCycleFix === 'function') {
-            window.startCycleFix();
-        }
-        if (typeof window.startPhysicsAttackSync === 'function') {
-            window.startPhysicsAttackSync();
-        }
-        if (typeof window.startCardFlipFix === 'function') {
-            window.startCardFlipFix();
-        }
-        
-        // Initialize the game after single player mode is set up
-        setTimeout(() => {
-            initGame();
-        }, 100);
-    }
-
+    
     hideMenu() {
         this.menuContainer.style.display = 'none';
+    }
+    
+    hide() {
+        this.hideMenu();
     }
 }
 

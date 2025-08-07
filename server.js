@@ -215,64 +215,64 @@ function canPlayerLink(room, playerNum) {
 
 // Helper to get all valid move coordinates for a single pawn
 function getValidMovesForPawn(pawn, allPawns) {
-    if (!pawn || !pawn.isActive || pawn.remainingStamina <= 0) {
-        return [];
-    }
+  if (!pawn || !pawn.isActive || pawn.remainingStamina <= 0) {
+    return [];
+  }
 
-    const validMoves = [];
-    const { gridX, gridY, remainingStamina } = pawn;
-    const occupiedCoords = new Set(allPawns.map(p => `${p.gridX},${p.gridY}`));
+  const validMoves = [];
+  const { gridX, gridY, remainingStamina } = pawn;
+  const occupiedCoords = new Set(allPawns.map(p => `${p.gridX},${p.gridY}`));
 
-    // Check all tiles within stamina range
-    for (let x = 0; x < BOARD_SIZE; x++) {
-        for (let y = 0; y < BOARD_SIZE; y++) {
-            const distance = Math.abs(x - gridX) + Math.abs(y - gridY);
-            if (distance > 0 && distance <= remainingStamina) {
-                if (!occupiedCoords.has(`${x},${y}`)) {
-                    validMoves.push({ x, y });
-                }
-            }
+  // Check all tiles within stamina range
+  for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let y = 0; y < BOARD_SIZE; y++) {
+      const distance = Math.abs(x - gridX) + Math.abs(y - gridY);
+      if (distance > 0 && distance <= remainingStamina) {
+        if (!occupiedCoords.has(`${x},${y}`)) {
+          validMoves.push({ x, y });
         }
+      }
     }
-    return validMoves;
+  }
+  return validMoves;
 }
 
 // Helper to check if a pawn can attack any adjacent enemy
 function canPawnAttack(pawn, allPawns) {
-    if (!pawn || !pawn.isActive || pawn.remainingStamina <= 0) {
-        return false;
-    }
+  if (!pawn || !pawn.isActive || pawn.remainingStamina <= 0) {
+    return false;
+  }
 
-    const { gridX, gridY, player } = pawn;
-    const adjacentCoords = [
-        { x: gridX + 1, y: gridY },
-        { x: gridX - 1, y: gridY },
-        { x: gridX, y: gridY + 1 },
-        { x: gridX, y: gridY - 1 },
-    ];
+  const { gridX, gridY, player } = pawn;
+  const adjacentCoords = [
+    { x: gridX + 1, y: gridY },
+    { x: gridX - 1, y: gridY },
+    { x: gridX, y: gridY + 1 },
+    { x: gridX, y: gridY - 1 },
+  ];
 
-    return allPawns.some(otherPawn => 
-        otherPawn && otherPawn.isActive &&
-        otherPawn.player !== player && 
-        adjacentCoords.some(coord => coord.x === otherPawn.gridX && coord.y === otherPawn.gridY)
-    );
+  return allPawns.some(otherPawn =>
+    otherPawn && otherPawn.isActive &&
+    otherPawn.player !== player &&
+    adjacentCoords.some(coord => coord.x === otherPawn.gridX && coord.y === otherPawn.gridY)
+  );
 }
 
 // Upgraded helper to determine if a player has any valid action
 function canPlayerStillAct(player, allPawns) {
-    if (!player || !player.allPawns) {
-        return false;
-    }
+  if (!player || !player.allPawns) {
+    return false;
+  }
 
-    return player.allPawns.some(pawn => {
-        if (!pawn || !pawn.isActive || pawn.remainingStamina <= 0) {
-            return false;
-        }
-        // Check for valid moves OR a valid attack
-        const hasValidMove = getValidMovesForPawn(pawn, allPawns).length > 0;
-        const hasValidAttack = canPawnAttack(pawn, allPawns);
-        return hasValidMove || hasValidAttack;
-    });
+  return player.allPawns.some(pawn => {
+    if (!pawn || !pawn.isActive || pawn.remainingStamina <= 0) {
+      return false;
+    }
+    // Check for valid moves OR a valid attack
+    const hasValidMove = getValidMovesForPawn(pawn, allPawns).length > 0;
+    const hasValidAttack = canPawnAttack(pawn, allPawns);
+    return hasValidMove || hasValidAttack;
+  });
 }
 
 // --- End Helper Functions ---
@@ -395,10 +395,10 @@ function finishLinkingPhase(io, room, roomCode) {
     console.log("Server resetting remainingStamina for all active pawns.");
     const allPawns = [...(room.player1?.allPawns || []), ...(room.player2?.allPawns || [])];
     allPawns.forEach(pawn => {
-        if (pawn && pawn.isActive && pawn.linkedCard) {
-            pawn.remainingStamina = pawn.linkedCard.stamina;
-            console.log(` -> Set stamina for ${pawn.id} to ${pawn.remainingStamina}`);
-        }
+      if (pawn && pawn.isActive && pawn.linkedCard) {
+        pawn.remainingStamina = pawn.linkedCard.stamina;
+        console.log(` -> Set stamina for ${pawn.id} to ${pawn.remainingStamina}`);
+      }
     });
     // --- End Stamina Initialization ---
 
@@ -423,18 +423,18 @@ function finishLinkingPhase(io, room, roomCode) {
 
 // Function to Advance Turn or Start New Cycle
 function advanceTurnOrCycle(io, room, roomCode) {
-    if (!io || !room || !roomCode || !room.gameState) {
-        console.error("advanceTurnOrCycle: Invalid arguments or io/room/gameState missing.");
-        return;
-    }
+  if (!io || !room || !roomCode || !room.gameState) {
+    console.error("advanceTurnOrCycle: Invalid arguments or io/room/gameState missing.");
+    return;
+  }
 
-    // This is the single source of truth for turn progression.
-    // It is called after a game action OR when a player manually passes.
-    
-    // Clear any previous "cannot act" flags as we are re-evaluating the entire board state.
-    if (room.gameState.playersWhoCannotAct) {
-        room.gameState.playersWhoCannotAct.clear();
-    }
+  // This is the single source of truth for turn progression.
+  // It is called after a game action OR when a player manually passes.
+
+  // Clear any previous "cannot act" flags as we are re-evaluating the entire board state.
+  if (room.gameState.playersWhoCannotAct) {
+    room.gameState.playersWhoCannotAct.clear();
+  }
   const currentPlayerNum = room.gameState.currentPlayer;
   const currentPlayer = currentPlayerNum === PLAYER_1 ? room.player1 : room.player2;
   const opponentPlayerNum = currentPlayerNum === PLAYER_1 ? PLAYER_2 : PLAYER_1;
@@ -470,38 +470,38 @@ function advanceTurnOrCycle(io, room, roomCode) {
 }
 
 function startNewCycle(io, room, roomCode) {
-    console.log("Preparing to start new cycle...");
-    if (room.player1) room.player1.activePawns = [];
-    if (room.player2) room.player2.activePawns = [];
-    room.gameState.cycleNumber++;
-    room.gameState.roundNumber = 1;
-    room.gameState.currentPhase = `SETUP_${room.gameState.roundNumber}_DEFINE`;
-    room.gameState.currentPlayer = getDefiningPlayerForRound(1);
-    room.gameState.initialActivePawnIDs = [];
-    room.gameState.actedPawnIDsThisCycle = [];
-    if (room.player1) { room.player1.cardsReady = false; room.player1.cards = []; }
-    if (room.player2) { room.player2.cardsReady = false; room.player2.cards = []; }
-    room.gameState.cycleInitiativePlayer = null;
-    room.gameState.initiativePlayer = null;
+  console.log("Preparing to start new cycle...");
+  if (room.player1) room.player1.activePawns = [];
+  if (room.player2) room.player2.activePawns = [];
+  room.gameState.cycleNumber++;
+  room.gameState.roundNumber = 1;
+  room.gameState.currentPhase = `SETUP_${room.gameState.roundNumber}_DEFINE`;
+  room.gameState.currentPlayer = getDefiningPlayerForRound(1);
+  room.gameState.initialActivePawnIDs = [];
+  room.gameState.actedPawnIDsThisCycle = [];
+  if (room.player1) { room.player1.cardsReady = false; room.player1.cards = []; }
+  if (room.player2) { room.player2.cardsReady = false; room.player2.cards = []; }
+  room.gameState.cycleInitiativePlayer = null;
+  room.gameState.initiativePlayer = null;
 
-    console.log("Resetting pawn states for new cycle...");
-    const allSurvivingPawns = [...(room.player1?.allPawns || []), ...(room.player2?.allPawns || [])];
-    allSurvivingPawns.forEach(pawn => {
-        if (pawn) {
-            pawn.isActive = false;
-            pawn.currentHP = null;
-            pawn.linkedCard = null;
-            pawn.remainingStamina = null;
-        }
-    });
+  console.log("Resetting pawn states for new cycle...");
+  const allSurvivingPawns = [...(room.player1?.allPawns || []), ...(room.player2?.allPawns || [])];
+  allSurvivingPawns.forEach(pawn => {
+    if (pawn) {
+      pawn.isActive = false;
+      pawn.currentHP = null;
+      pawn.linkedCard = null;
+      pawn.remainingStamina = null;
+    }
+  });
 
-    console.log(`Server starting new cycle ${room.gameState.cycleNumber}`);
-    io.to(roomCode).emit('newCycle', {
-        cycleNumber: room.gameState.cycleNumber,
-        roundNumber: room.gameState.roundNumber,
-        currentPhase: room.gameState.currentPhase,
-        currentPlayer: room.gameState.currentPlayer
-    });
+  console.log(`Server starting new cycle ${room.gameState.cycleNumber}`);
+  io.to(roomCode).emit('newCycle', {
+    cycleNumber: room.gameState.cycleNumber,
+    roundNumber: room.gameState.roundNumber,
+    currentPhase: room.gameState.currentPhase,
+    currentPlayer: room.gameState.currentPlayer
+  });
 }
 // --- End State Transition Helper Functions ---
 
@@ -966,7 +966,7 @@ io.on("connection", (socket) => {
           console.log(
             `Server processing P${playerNum} move ${pawnId} from [${actingPawn.gridX}, ${actingPawn.gridY}] to [${targetX}, ${targetY}], distance: ${distance}`
           );
-          
+
           actingPawn.gridX = targetX;
           actingPawn.gridY = targetY;
           actionDataForClient.targetX = targetX;
@@ -976,7 +976,7 @@ io.on("connection", (socket) => {
             const currentStamina = actingPawn.remainingStamina || actingPawn.linkedCard.stamina;
             actingPawn.remainingStamina = Math.max(0, currentStamina - distance);
             console.log(`Server: Pawn ${actingPawn.id} stamina after move (${distance} distance): ${actingPawn.remainingStamina}`);
-            
+
             if (actingPawn.remainingStamina === 0) {
               console.log(`Server: Pawn ${actingPawn.id} became inactive due to 0 stamina`);
             }
@@ -984,7 +984,7 @@ io.on("connection", (socket) => {
         } else if (actionType === "attack") {
           const originalAttackerX = actingPawn.gridX;
           const originalAttackerY = actingPawn.gridY;
-          
+
           const defendingPawn = getPawnByIdServer(room, targetPawnId);
           if (!defendingPawn) {
             socket.emit("error", `Defender ${targetPawnId} not found`);
@@ -1111,7 +1111,7 @@ io.on("connection", (socket) => {
 
           if (actingPawn.linkedCard && actingPawn.linkedCard.stamina) {
             let staminaCost = 1; // Base attack cost is always 1
-            
+
             // Only add movement cost if attacker moved for reasons OTHER than taking eliminated defender's spot
             if (attackerMoved && attackerMovedToPos && !defenderEliminated) {
               const moveDistance = Math.abs(attackerMovedToPos.x - originalAttackerX) + Math.abs(attackerMovedToPos.y - originalAttackerY);
@@ -1120,11 +1120,11 @@ io.on("connection", (socket) => {
             } else if (attackerMoved && attackerMovedToPos && defenderEliminated) {
               console.log(`Server: Attack + taking eliminated defender's spot from [${originalAttackerX},${originalAttackerY}] to [${attackerMovedToPos.x},${attackerMovedToPos.y}], stamina cost: 1 (fixed)`);
             }
-            
+
             const currentStamina = actingPawn.remainingStamina || actingPawn.linkedCard.stamina;
             actingPawn.remainingStamina = Math.max(0, currentStamina - staminaCost);
             console.log(`Server: Pawn ${actingPawn.id} stamina after attack (${staminaCost} total): ${actingPawn.remainingStamina}`);
-            
+
             if (actingPawn.remainingStamina === 0) {
               console.log(`Server: Pawn ${actingPawn.id} became inactive due to 0 stamina`);
             }
@@ -1227,7 +1227,7 @@ io.on("connection", (socket) => {
     // Simple turn switching - alternate between players
     const nextPlayer = playerNum === PLAYER_1 ? PLAYER_2 : PLAYER_1;
     room.gameState.currentPlayer = nextPlayer;
-    
+
     console.log(`Server switching turn from P${playerNum} to P${nextPlayer}`);
     io.to(roomCode).emit('nextTurn', { currentPlayer: room.gameState.currentPlayer });
   });
@@ -1387,7 +1387,7 @@ io.on("connection", (socket) => {
       console.warn("Invalid physics attack animation data");
       return;
     }
-    
+
     // Find which room this socket is in
     let foundRoomCode = null;
     for (const [roomCode, room] of gameRooms) {
@@ -1396,12 +1396,12 @@ io.on("connection", (socket) => {
         break;
       }
     }
-    
+
     if (!foundRoomCode) {
       console.warn("Could not find room for physics attack animation");
       return;
     }
-    
+
     // Broadcast to all other players in the room
     socket.to(foundRoomCode).emit("physicsAttackAnimation", data);
     console.log(`Broadcasting physics attack animation in room ${foundRoomCode}`);

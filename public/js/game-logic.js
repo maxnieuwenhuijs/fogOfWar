@@ -259,12 +259,6 @@ function triggerCameraShake(intensity = 5, duration = 150) {
 
 // --- Socket Event Initialization ---
 function initializeGameSocketEvents() {
-  // Skip socket initialization for single player mode
-  if (gameState?.singleplayerMode) {
-    console.log("Single player mode - skipping socket initialization");
-    return;
-  }
-  
   if (typeof socket === "undefined" || !socket) {
     console.error("Socket not initialized!");
     setTimeout(initializeGameSocketEvents, 200);
@@ -1507,19 +1501,6 @@ function handleLinkingPawnClick(pawn) {
     if (typeof soundManager !== "undefined") {
       soundManager.playSound("ui_link");
     }
-  } else if (gameState.singleplayerMode && typeof handleSinglePlayerEvent === "function") {
-    // Single player fallback
-    console.log("🎮 Single player linking - calling direct handler");
-    handleSinglePlayerEvent("linkCard", {
-      roomCode: "SINGLE",
-      cardId: selectedCardToLink.id,
-      pawnId: pawn.id,
-    });
-    
-    // Play linking sound
-    if (typeof soundManager !== "undefined") {
-      soundManager.playSound("ui_link");
-    }
   } else {
     console.error("Socket/Session missing and not single player mode.");
     if (div) div.textContent = "Error linking.";
@@ -2654,10 +2635,9 @@ function handleConfirmCards() {
       socket: socket,
       hasGameSession: typeof gameSession !== "undefined",
       gameSession: gameSession,
-      singleplayerMode: gameState?.singleplayerMode
     });
     
-    if ((typeof socket !== "undefined" && typeof gameSession !== "undefined") || gameState?.singleplayerMode) {
+    if (typeof socket !== "undefined" && typeof gameSession !== "undefined") {
       // Play confirmation sound
       if (typeof soundManager !== "undefined") {
         soundManager.playSound("ui_confirm_cards");
@@ -2669,16 +2649,6 @@ function handleConfirmCards() {
           cards: cards,
           playerNum: gameState.playerNumber,
         });
-      } else if (gameState?.singleplayerMode) {
-        console.log('🎮 Single player mode - cards submitted directly');
-        // In single player mode, call handler directly if socket override failed
-        if (typeof handleSinglePlayerEvent === 'function') {
-          handleSinglePlayerEvent('defineCards', {
-            roomCode: 'SINGLE',
-            cards: cards,
-            playerNum: gameState.playerNumber,
-          });
-        }
       }
       if (typeof showUIPanel === "function") showUIPanel("waiting"); // Ga naar wachtscherm na verzenden
     } else {
@@ -2688,7 +2658,6 @@ function handleConfirmCards() {
         sessionType: typeof gameSession,
         socketExists: !!window.socket,
         sessionExists: !!window.gameSession,
-        singleplayer: gameState?.singleplayerMode
       });
       if (btn) {
         btn.disabled = false;
@@ -2753,12 +2722,7 @@ function handlePlayerTurn() {
         gameState.currentPhase = "WAITING_FOR_TURN";
         if (typeof updateActionUI === "function") updateActionUI(null); // Update UI to reflect waiting state
       } else {
-        if (gameState?.singleplayerMode && typeof handleSinglePlayerEvent === 'function') {
-        console.log('🎮 Single player mode - handling playerCannotAct locally');
-        handleSinglePlayerEvent('playerCannotAct', { roomCode: 'SINGLE' });
-      } else {
         console.error("Cannot emit playerCannotAct - socket/session missing.");
-      }
         // Handle error case? Maybe allow player to try again? For now, just log.
       }
     }
