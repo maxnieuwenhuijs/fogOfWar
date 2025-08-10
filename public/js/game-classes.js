@@ -412,6 +412,11 @@ class Pawn {
   }
 
   updateBars() {
+    try { console.log("[Pawn.updateBars]", { id: this.id, active: this.isActive, hasCard: !!this.linkedCard, rs: this.remainingStamina, hp: this.currentHP }); } catch(_) {}
+    // If visual is already destroyed or missing, skip
+    if (!this.pixiObject || this.pixiObject.destroyed) {
+      return;
+    }
     if (!this.isActive || !this.linkedCard) {
         this.staminaBarContainer.visible = false;
         this.hpBarContainer.visible = false;
@@ -439,6 +444,7 @@ class Pawn {
     const maxHP = this.linkedCard.hp || 5;
     for (let i = 0; i < this.hpBars.length; i++) {
         const bar = this.hpBars[i];
+        if (!bar || bar.destroyed) continue;
         bar.clear();
         const color = (this.hpBars.length - i) <= this.currentHP ? HP_COLOR : DEPLETED_COLOR;
         bar.beginFill(color);
@@ -449,6 +455,7 @@ class Pawn {
     // Update Stamina Bar with gradient colors
     for (let i = 0; i < this.staminaBars.length; i++) {
         const bar = this.staminaBars[i];
+        if (!bar || bar.destroyed) continue;
         bar.clear();
         let color = DEPLETED_COLOR;
         

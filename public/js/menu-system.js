@@ -61,9 +61,33 @@ class MenuSystem {
     }
 
     showSingleplayerMenu() {
-        // Singleplayer not implemented
-        alert('Singleplayer mode is not available yet. Please create or join a multiplayer game.');
-        this.showMainMenu();
+        this.currentMenu = 'singleplayer';
+        // Start singleplayer immediately (simple flow)
+        try {
+            // Start client-only helpers
+            if (typeof window.startGamePatch === 'function') {
+                window.startGamePatch();
+            }
+            if (typeof window.startCycleFix === 'function') {
+                window.startCycleFix();
+            }
+            if (typeof window.startPhysicsAttackSync === 'function') {
+                window.startPhysicsAttackSync();
+            }
+
+            // Hide menu and launch SP
+            this.menuContainer.style.display = 'none';
+            if (typeof window.initSimpleSingleplayer === 'function') {
+                window.initSimpleSingleplayer();
+            } else {
+                alert('Singleplayer module missing.');
+                this.showMainMenu();
+            }
+        } catch (e) {
+            console.error('Failed to start singleplayer:', e);
+            alert('Failed to start singleplayer. See console for details.');
+            this.showMainMenu();
+        }
     }
 
     showMultiplayerMenu() {

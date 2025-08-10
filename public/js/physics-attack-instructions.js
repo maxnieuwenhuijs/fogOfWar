@@ -1,8 +1,8 @@
 // Physics Attack Instructions Helper
 class PhysicsAttackInstructions {
     static show() {
-        // Remove any existing instructions
-        this.hide();
+        // Disabled in singleplayer build
+        return;
         
         const container = document.createElement('div');
         container.id = 'physics-attack-instructions';
@@ -48,12 +48,7 @@ class PhysicsAttackInstructions {
         document.body.appendChild(container);
     }
     
-    static hide() {
-        const existing = document.getElementById('physics-attack-instructions');
-        if (existing) {
-            existing.remove();
-        }
-    }
+    static hide() {}
 }
 
 // Add to window for global access

@@ -307,10 +307,11 @@ function initializeGameSocketEvents() {
 
       if (attackerPawn) {
         // Bereken HP na schade (mag niet onder 0)
+        // In singleplayer, the mock already applied HP to local state; respect flag to avoid double-applying
         finalAttackerHP = Math.max(
           0,
           (attackerPawn.currentHP ?? attackerPawn.linkedCard?.hp ?? 0) -
-          data.damageDealt.damageToAttacker
+          (data.hpAlreadyApplied ? 0 : data.damageDealt.damageToAttacker)
         );
         // Update de logische HP state van de pion
         if (attackerPawn.currentHP !== null) {
@@ -324,7 +325,7 @@ function initializeGameSocketEvents() {
           finalDefenderHP = Math.max(
             0,
             (defenderPawn.currentHP ?? defenderPawn.linkedCard.hp) -
-            data.damageDealt.damageToDefender
+            (data.hpAlreadyApplied ? 0 : data.damageDealt.damageToDefender)
           );
           if (defenderPawn.currentHP !== null) {
             defenderPawn.currentHP = finalDefenderHP;
@@ -429,12 +430,16 @@ function initializeGameSocketEvents() {
 
     // --- Update Acting Pawn (als het overleefde) ---
     const actingPawn = getPawnById(data.pawnId);
-          if (actingPawn) {
-        if (data.updatedPawn) {
-          actingPawn.currentHP = data.updatedPawn.currentHP;
-          actingPawn.remainingStamina = data.updatedPawn.remainingStamina;
-          actingPawn.updateBars();
-        }
+    console.log("[actionPerformed] actingPawn lookup", { id: data.pawnId, found: !!actingPawn });
+      if (actingPawn) {
+      if (data.updatedPawn) {
+        const before = { hp: actingPawn.currentHP, rs: actingPawn.remainingStamina };
+        actingPawn.currentHP = data.updatedPawn.currentHP;
+        actingPawn.remainingStamina = data.updatedPawn.remainingStamina;
+        console.log("[actionPerformed] applying updatedPawn", { before, updated: data.updatedPawn });
+        if (typeof actingPawn.updateBars === "function") actingPawn.updateBars();
+        console.log("[actionPerformed] after update", { id: actingPawn.id, hp: actingPawn.currentHP, rs: actingPawn.remainingStamina });
+      }
 
       console.log(
         `Updating acting pawn ${actingPawn.id} state/visuals.`

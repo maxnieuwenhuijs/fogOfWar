@@ -290,5 +290,5 @@ class PhysicsTestPanel {
 }
 
 // Create global instance
-window.physicsTestPanel = new PhysicsTestPanel();
-console.log('Physics Test Panel ready! Press P to toggle.');
+// Disabled in singleplayer build
+// window.physicsTestPanel = new PhysicsTestPanel();

@@ -10,6 +10,8 @@ const soundManager = {
 
     // Combat related sounds
     elimination: ["assets/sounds/elimination/elimination1.wav"],
+    // Generic attack swing/impact — reuse an existing suitable sound if no dedicated file
+    attack: ["assets/sounds/ui_click/drum4.mp3"],
 
     // UI related sounds
     ui_click: [

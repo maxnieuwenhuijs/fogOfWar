@@ -18,7 +18,7 @@ class TestMenu {
             }
         });
         
-        console.log("Test menu initialized. Press F9 to toggle.");
+        // Disabled in singleplayer build
     }
 
     createMenuUI() {
@@ -135,7 +135,7 @@ class TestMenu {
         // Add info text
         const info = document.createElement('p');
         info.style.cssText = 'margin-top: 20px; font-size: 12px; text-align: center; opacity: 0.7;';
-        info.textContent = 'Press F9 to toggle this menu';
+        info.textContent = '';
         this.menuElement.appendChild(info);
 
         // Append to body
@@ -530,10 +530,12 @@ class TestMenu {
 let testMenu = null;
 
 // Initialize when ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+if (!window.__DISABLE_TEST_MENU__) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            testMenu = new TestMenu();
+        });
+    } else {
         testMenu = new TestMenu();
-    });
-} else {
-    testMenu = new TestMenu();
+    }
 }
