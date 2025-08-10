@@ -440,28 +440,48 @@
 
   function applyRandomHitAnimation(defenderPawn) {
     const obj = defenderPawn && defenderPawn.pixiObject;
-    if (!obj) return;
+    if (!obj || obj.destroyed) return;
     const choice = Math.floor(Math.random() * 3);
     if (choice === 0) {
       // Quick red flash
-      const originalTint = defenderPawn.graphics ? defenderPawn.graphics.tint : 0xFFFFFF;
-      if (defenderPawn.graphics) defenderPawn.graphics.tint = 0xFF4444;
-      setTimeout(() => { if (defenderPawn.graphics) defenderPawn.graphics.tint = originalTint; }, 120);
+      const hasGfx = defenderPawn && defenderPawn.graphics && !defenderPawn.graphics.destroyed;
+      const originalTint = hasGfx ? defenderPawn.graphics.tint : 0xFFFFFF;
+      if (hasGfx) defenderPawn.graphics.tint = 0xFF4444;
+      setTimeout(() => {
+        if (defenderPawn && defenderPawn.graphics && !defenderPawn.graphics.destroyed) {
+          defenderPawn.graphics.tint = originalTint;
+        }
+      }, 120);
     } else if (choice === 1) {
       // Small shake
       const ox = obj.x, oy = obj.y;
       let i = 0;
       const id = setInterval(() => {
         i += 1;
-        obj.x = ox + (i % 2 === 0 ? 2 : -2);
-        obj.y = oy + (i % 2 === 0 ? -2 : 2);
-        if (i >= 6) { clearInterval(id); obj.x = ox; obj.y = oy; }
+        if (!defenderPawn || !defenderPawn.pixiObject || defenderPawn.pixiObject.destroyed) {
+          clearInterval(id);
+          return;
+        }
+        const o = defenderPawn.pixiObject;
+        o.x = ox + (i % 2 === 0 ? 2 : -2);
+        o.y = oy + (i % 2 === 0 ? -2 : 2);
+        if (i >= 6) {
+          clearInterval(id);
+          if (defenderPawn && defenderPawn.pixiObject && !defenderPawn.pixiObject.destroyed) {
+            defenderPawn.pixiObject.x = ox;
+            defenderPawn.pixiObject.y = oy;
+          }
+        }
       }, 16);
     } else {
       // Brief scale pop
       const sX = obj.scale.x, sY = obj.scale.y;
       obj.scale.set(sX * 1.12, sY * 1.12);
-      setTimeout(() => { obj.scale.set(sX, sY); }, 120);
+      setTimeout(() => {
+        if (defenderPawn && defenderPawn.pixiObject && !defenderPawn.pixiObject.destroyed) {
+          defenderPawn.pixiObject.scale.set(sX, sY);
+        }
+      }, 120);
     }
   }
 
