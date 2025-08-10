@@ -486,6 +486,10 @@
   }
 
   function switchTurnTo(playerNum) {
+    if (gameState.currentPhase === "GAME_OVER") {
+      console.log(SP_LOG_PREFIX, "switchTurnTo ignored - GAME_OVER");
+      return;
+    }
     gameState.currentPlayer = playerNum;
     gameState.currentPhase = "ACTION";
     console.log(SP_LOG_PREFIX, "switchTurnTo", { playerNum });
@@ -518,6 +522,7 @@
   }
 
   function ensureAiTurnSequence() {
+    if (gameState.currentPhase === "GAME_OVER") return;
     if (typeof canPlayerAct !== "function") return;
     // Only proceed if it's AI's turn
     if (gameState.currentPlayer !== PLAYER_2 || gameState.currentPhase !== "ACTION") return;
@@ -533,10 +538,50 @@
     }
     // AI can act → perform one action
     const acted = aiTakeOneMove();
-    // After one AI action, strictly hand turn back to the player
-    setTimeout(() => {
-      switchTurnTo(PLAYER_1);
-    }, 200);
+    // After one AI action, run unified post-action evaluation
+    if (acted) {
+      setTimeout(() => postActionTurnEvaluation(PLAYER_2), 160);
+    }
+  }
+
+  // Unified post-action evaluator used by both P1 and AI actions
+  function postActionTurnEvaluation(lastActorPlayerNum) {
+    try {
+      console.log(SP_LOG_PREFIX, "post-action turn evaluation start", { lastActor: lastActorPlayerNum, phase: gameState.currentPhase });
+      if (gameState.currentPhase === "GAME_OVER") {
+        console.log(SP_LOG_PREFIX, "post-action evaluation aborted - GAME_OVER");
+        return;
+      }
+      if (typeof canPlayerAct === "function") {
+        const aiCan = canPlayerAct(PLAYER_2);
+        const playerCan = canPlayerAct(PLAYER_1);
+        console.log(SP_LOG_PREFIX, "post-action canPlayerAct results", { aiCan, playerCan });
+        if (!aiCan && !playerCan) {
+          startNewCycleLocal();
+          return;
+        }
+        if (aiCan && playerCan) {
+          // Alternate: give turn to the other player from the last actor
+          const next = lastActorPlayerNum === PLAYER_1 ? PLAYER_2 : PLAYER_1;
+          switchTurnTo(next);
+          return;
+        }
+        if (aiCan) {
+          switchTurnTo(PLAYER_2);
+          return;
+        }
+        if (playerCan) {
+          switchTurnTo(PLAYER_1);
+          return;
+        }
+      } else {
+        // Fallback strict alternation if canPlayerAct not available
+        const next = lastActorPlayerNum === PLAYER_1 ? PLAYER_2 : PLAYER_1;
+        switchTurnTo(next);
+      }
+    } catch (e) {
+      console.warn(SP_LOG_PREFIX, "postActionTurnEvaluation error", e);
+    }
   }
 
   function ensureStartingTurnActable() {
@@ -768,33 +813,14 @@
             updatedPawn: { currentHP: actingPawn.currentHP, remainingStamina: actingPawn.remainingStamina },
             hpAlreadyApplied: true,
           });
-          setTimeout(() => {
-            if (gameState.currentPlayer !== PLAYER_2) switchTurnTo(PLAYER_2);
-          }, 0);
           // Ensure bars reflect immediately
           if (typeof actingPawn.updateBars === "function") actingPawn.updateBars();
         }
-        // After player's action, decide next turn using local canPlayerAct evaluation
-        // Give the client a moment to process actionPerformed visuals first
+        // After player's action, always hand to unified evaluator
         setTimeout(() => {
-          console.log(SP_LOG_PREFIX, "post-action turn evaluation start");
-          if (typeof canPlayerAct === "function") {
-            const aiCan = canPlayerAct(PLAYER_2);
-            const playerCan = canPlayerAct(PLAYER_1);
-            console.log(SP_LOG_PREFIX, "post-action canPlayerAct results", { aiCan, playerCan });
-            if (aiCan) {
-              // Give AI the turn; a single AI move will be executed by ensureAiTurnSequence
-              switchTurnTo(PLAYER_2);
-            } else if (playerCan) {
-              switchTurnTo(PLAYER_1);
-            } else {
-              startNewCycleLocal();
-            }
-          } else {
-            // Fallback strict alternation
-            switchTurnTo(PLAYER_2);
-            setTimeout(() => switchTurnTo(PLAYER_1), 250);
-          }
+          if (gameState.currentPhase === "GAME_OVER") return;
+          // Prefer AI next if both can act; evaluator will decide
+          postActionTurnEvaluation(PLAYER_1);
         }, 120);
         break;
       }
