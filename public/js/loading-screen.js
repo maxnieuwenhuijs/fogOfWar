@@ -37,11 +37,11 @@ class LoadingScreen {
             </div>
         `;
         document.body.appendChild(this.loadingContainer);
-        
+
         this.progressBar = document.getElementById('loading-progress-fill');
         this.progressText = document.getElementById('loading-progress-text');
         this.loadingMessage = document.getElementById('loading-message');
-        
+
         // Start rotating tips
         this.startTipRotation();
     }
@@ -80,10 +80,10 @@ class LoadingScreen {
             "Tip: Use terrain and positioning to your advantage!",
             "Tip: Sometimes retreat is the best strategy!"
         ];
-        
+
         let currentTip = 0;
         const tipElement = document.getElementById('loading-tip');
-        
+
         setInterval(() => {
             currentTip = (currentTip + 1) % tips.length;
             tipElement.style.opacity = '0';
@@ -98,7 +98,7 @@ class LoadingScreen {
     async loadAssets() {
         this.show();
         this.setMessage('Loading game assets...');
-        
+
         // Define all assets to load
         this.assetList = [
             // Icons
@@ -106,18 +106,18 @@ class LoadingScreen {
             { type: 'texture', alias: 'p2_piece', src: 'assets/images/p2_piece.png' },
             { type: 'texture', alias: 'p1_medal', src: 'assets/images/p1_medal.png' },
             { type: 'texture', alias: 'p2_medal', src: 'assets/images/p2_medal.png' },
-            
+
             // Sound effects
             { type: 'sound', alias: 'ui_start', src: 'assets/sounds/ui_start/start.mp3' },
             { type: 'sound', alias: 'ui_click', src: 'assets/sounds/ui_click/drum1.mp3' },
             { type: 'sound', alias: 'pawn_move', src: 'assets/sounds/pawn_move/move.mp3' },
             { type: 'sound', alias: 'elimination', src: 'assets/sounds/elimination/elimination1.wav' },
-            
+
             // Music tracks
             { type: 'music', alias: 'music1', src: 'assets/music/Strauss The Blue Danube.mp3' },
             { type: 'music', alias: 'music2', src: 'assets/music/Strauss Emperor Waltz.mp3' }
         ];
-        
+
         // Add combination icons if they exist
         if (typeof STAT_COMBINATION_TO_ICON_ALIAS !== 'undefined') {
             for (const key in STAT_COMBINATION_TO_ICON_ALIAS) {
@@ -130,24 +130,24 @@ class LoadingScreen {
                 }
             }
         }
-        
+
         this.totalAssets = this.assetList.length;
         this.loadedAssets = 0;
-        
+
         // Load assets with progress tracking
         for (const asset of this.assetList) {
             try {
                 this.setMessage(`Loading ${asset.type}: ${asset.alias}...`);
-                
+
                 if (asset.type === 'texture') {
                     await this.loadTexture(asset);
                 } else if (asset.type === 'sound' || asset.type === 'music') {
                     await this.loadAudio(asset);
                 }
-                
+
                 this.loadedAssets++;
                 this.updateProgress((this.loadedAssets / this.totalAssets) * 100);
-                
+
             } catch (error) {
                 console.warn(`Failed to load ${asset.type}: ${asset.alias}`, error);
                 // Continue loading other assets even if one fails
@@ -155,10 +155,10 @@ class LoadingScreen {
                 this.updateProgress((this.loadedAssets / this.totalAssets) * 100);
             }
         }
-        
+
         this.setMessage('Loading complete!');
         await this.delay(500); // Show complete message briefly
-        
+
         return true;
     }
 

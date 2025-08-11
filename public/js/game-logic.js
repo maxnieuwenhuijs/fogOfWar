@@ -685,6 +685,7 @@ function initializeGameSocketEvents() {
     ) {
       showUIPanel("link");
       updateLinkingUI();
+      try { window.MobileUI?.setDrawerOpen?.(gameState.currentPlayer === gameState.playerNumber); } catch (_) { }
       if (gameState.currentPlayer === gameState.playerNumber) {
         TimerManager.start(40, autoLinkAction);
       }
@@ -795,7 +796,9 @@ function initializeGameSocketEvents() {
     if (typeof updateTurnMedal === "function") updateTurnMedal();
 
     if (typeof updateLinkingUI === "function") {
+      if (typeof showUIPanel === "function") showUIPanel("link");
       updateLinkingUI();
+      try { window.MobileUI?.setDrawerOpen?.(gameState.currentPlayer === gameState.playerNumber); } catch (_) { }
       if (gameState.currentPlayer === gameState.playerNumber) {
         TimerManager.start(40, autoLinkAction);
       }
@@ -815,6 +818,8 @@ function initializeGameSocketEvents() {
     setTimeout(() => {
       if (typeof handleCardDefinition === "function") handleCardDefinition();
       else console.error("handleCardDefinition missing!");
+      // Auto-open the card drawer on DEFINE phases
+      try { if (gameState.currentPhase && gameState.currentPhase.endsWith('DEFINE')) { window.MobileUI?.setDrawerOpen?.(true); } } catch (_) { }
     }, 50);
   });
   socket.on("startActionPhase", (data) => {
@@ -1540,6 +1545,7 @@ function handleLinkingPawnClick(pawn) {
     const msg = "Select a card first!";
     if (div) div.textContent = msg;
     else showToast(msg);
+    try { if (window.SpLogger) SpLogger.log('link.debug.noCard', { clickPawnId: pawn?.id, phase: gameState.currentPhase, currentPlayer: gameState.currentPlayer, me: gameState.playerNumber }); } catch (_) { }
     return;
   }
   if (pawn.player !== gameState.currentPlayer) {
@@ -1556,11 +1562,11 @@ function handleLinkingPawnClick(pawn) {
     else showToast(msg);
     return;
   }
-  console.log(
-    `Attempting link: Card ${selectedCardToLink.id} to Pawn ${pawn.id}`
-  );
+  console.log(`Attempting link: Card ${selectedCardToLink.id} to Pawn ${pawn.id}`);
+  try { if (window.SpLogger) SpLogger.log('link.debug.attempt', { cardId: selectedCardToLink.id, pawnId: pawn.id }); } catch (_) { }
   if (div) div.textContent = `Linking card...`;
   if (typeof socket !== "undefined" && typeof gameSession !== "undefined") {
+    try { console.log('[link.emit]', { roomCode: gameSession.roomCode, cardId: selectedCardToLink.id, pawnId: pawn.id }); } catch (_) { }
     socket.emit("linkCard", {
       roomCode: gameSession.roomCode,
       cardId: selectedCardToLink.id,

@@ -15,11 +15,6 @@
 </head>
 
 <body>
-  <!-- Main Title Banner -->
-  <div class="main-title-banner">
-    <h1>Fog of War</h1> <!-- Updated Title -->
-  </div>
-
   <!-- Game Stats Bar -->
   <div class="game-stats-bar">
     <div class="stats-content">
@@ -45,26 +40,43 @@
   <div id="lobby-screen" class="screen">
     <!-- Removed original h1 here -->
     <div class="lobby-container">
-      <div class="lobby-section">
-        <h2>Create a Game</h2>
-        <div class="form-group">
-          <label for="create-name">Your Name:</label>
-          <input type="text" id="create-name" placeholder="Enter your name" />
-        </div>
-        <button id="create-game-btn" class="primary-btn">Create Game</button>
+      <!-- Top buttons row -->
+      <div class="lobby-top-buttons">
+        <button id="create-game-btn" class="lobby-action-btn">Create Game</button>
+        <button id="show-join-game-btn" class="lobby-action-btn">Join Game</button>
       </div>
-      <div class="lobby-divider"></div>
-      <div class="lobby-section">
-        <h2>Join a Game</h2>
-        <div class="form-group">
-          <label for="join-name">Your Name:</label>
-          <input type="text" id="join-name" placeholder="Enter your name" />
+      
+      <!-- Join game form (initially hidden) -->
+      <div id="join-game-form" class="join-game-form" style="display: none;">
+        <div class="form-row">
+          <input type="text" id="room-code" placeholder="Enter 6-letter room code" />
+          <button id="join-game-btn" class="primary-btn">Join</button>
+          <button id="cancel-join-btn" class="secondary-btn">Cancel</button>
         </div>
-        <div class="form-group">
-          <label for="room-code">Room Code:</label>
-          <input type="text" id="room-code" placeholder="Enter 6-letter code" />
+      </div>
+      
+      <!-- Public visibility option for create game (initially hidden) -->
+      <div id="create-game-options" class="create-game-options" style="display: none;">
+        <h3>Create Game</h3>
+        <div class="radio-group">
+          <label><input type="radio" name="create-visibility" value="public" checked> Public (listed)</label>
+          <label><input type="radio" name="create-visibility" value="private"> Private (join by code)</label>
         </div>
-        <button id="join-game-btn" class="primary-btn">Join Game</button>
+        <div class="form-row" style="margin-top: 15px; justify-content: center;">
+          <button id="confirm-create-btn" class="primary-btn">Create</button>
+          <button id="cancel-create-btn" class="secondary-btn">Cancel</button>
+        </div>
+      </div>
+      
+      <!-- Public games list -->
+      <div class="lobby-games-list ui-panel">
+        <div class="active-games-header">
+          <h2>List with online games</h2>
+          <button id="refresh-games-btn" class="refresh-btn" title="Refresh">🔄</button>
+        </div>
+        <ul id="active-games-list" class="active-games-list">
+          <li>No public games available</li>
+        </ul>
       </div>
     </div>
 
@@ -120,6 +132,10 @@
 
   <!-- Game Screen -->
   <div id="game-screen" class="screen">
+    <div class="mobile-topbar">
+      <button id="btn-chat" class="topbar-btn" title="Chat">💬</button>
+      <button id="btn-settings" class="topbar-btn" title="Settings">⚙️</button>
+    </div>
     <div class="game-area">
       <!-- Left Column: Info + Chat + Medal -->
       <div id="left-column">
@@ -178,6 +194,7 @@
       <!-- Center: Board -->
       <div class="board-and-cards-area">
         <div id="board-background-wrapper">
+          <div class="board-background-layer"></div>
           <div id="game-container">
             <!-- Haven Cells -->
             <div class="haven-cell player-1-haven" style="grid-area: 1 / 1;"></div>
@@ -196,7 +213,7 @@
       </div>
 
       <!-- Right Column: Cards -->
-      <div id="card-ui-area" class="ui-panel">
+      <div id="card-ui-area" class="ui-panel mobile-drawer">
         <div id="opponent-waiting" style="display: none">
           <h3><span class="panel-icon">⏳</span> Awaiting Opponent's Strategy</h3>
           <p>Hold position...</p>
@@ -460,6 +477,7 @@
   <script src="js/card-flip-fix.js"></script>
   <script src="js/singleplayer-simple.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/mobile-ui.js"></script>
 
   <!-- Copy to Clipboard Functie -->
   <script>

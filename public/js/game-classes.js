@@ -165,7 +165,14 @@ class Pawn {
     this.pixiObject.y = pixelPos.y + CELL_SIZE / 2;
 
     // --- Interaction Setup ---
+    this.pixiObject.name = this.id;
+    this.pixiObject.pawnRef = this; // allow global event logs to identify pawn
     this.pixiObject.eventMode = "static";
+    // Expand hit area to be at least the pawn circle size (helps on small canvases/DPR)
+    try {
+      const r = CELL_SIZE * 0.5;
+      this.pixiObject.hitArea = new PIXI.Circle(0, 0, r);
+    } catch (_) { }
     this.pixiObject.cursor = CURSOR_POINTER;
     this.pixiObject.on("pointerdown", (event) => {
       if (gameState.isAnimating || gameState.currentPhase === "GAME_OVER") return;

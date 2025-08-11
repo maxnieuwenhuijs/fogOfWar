@@ -30,7 +30,7 @@ class MenuSystem {
                         <span class="button-text">Single Player</span>
                     </button>
                     
-                    <button class="menu-button primary" onclick="menuSystem.showMultiplayerMenu()">
+                    <button class="menu-button primary" onclick="menuSystem.showMultiplayerGate()">
                         <span class="button-icon">🌐</span>
                         <span class="button-text">Multiplayer</span>
                     </button>
@@ -64,6 +64,10 @@ class MenuSystem {
         this.currentMenu = 'singleplayer';
         this.menuContainer.innerHTML = `
             <div class="menu-screen singleplayer-menu">
+                <button class="menu-button back" onclick="menuSystem.showMainMenu()">
+                    <span class="button-icon">⬅️</span>
+                    <span class="button-text">Back</span>
+                </button>
                 <h2 class="menu-title">Single Player</h2>
                 <p style="text-align:center;margin-top:-10px;margin-bottom:16px;opacity:0.85">Select a difficulty to begin</p>
                 <div class="difficulty-buttons">
@@ -87,12 +91,6 @@ class MenuSystem {
                             Hard Bot
                             <div style="font-size:0.8em;opacity:0.9;margin-top:4px">Aggressive, advanced tactics</div>
                         </span>
-                    </button>
-                </div>
-                <div class="settings-buttons" style="margin-top:16px;gap:10px">
-                    <button class="menu-button back" onclick="menuSystem.showMainMenu()">
-                        <span class="button-icon">⬅️</span>
-                        <span class="button-text">Back</span>
                     </button>
                 </div>
             </div>
@@ -125,6 +123,60 @@ class MenuSystem {
         this.menuContainer.querySelector('#btn-hard').onclick = () => startWithDifficulty('hard');
     }
 
+    showMultiplayerGate() {
+        this.currentMenu = 'multiplayer-gate';
+        this.menuContainer.innerHTML = `
+            <div class="menu-screen multiplayer-gate">
+                <button class="menu-button back" onclick="menuSystem.showMainMenu()">
+                    <span class="button-icon">⬅️</span>
+                    <span class="button-text">Back</span>
+                </button>
+                <h2 class="menu-title">Multiplayer</h2>
+                <div class="form-group" style="max-width:420px;margin:0 auto 12px auto;">
+                    <label for="gate-username">Choose a unique username</label>
+                    <input type="text" id="gate-username" placeholder="Commander name" />
+                </div>
+                <div class="settings-buttons" style="gap:10px;justify-content:center;">
+                    <button class="menu-button primary" id="btn-continue-mp">Continue</button>
+                </div>
+            </div>`;
+
+        const continueBtn = this.menuContainer.querySelector('#btn-continue-mp');
+        continueBtn.onclick = async () => {
+            const name = (this.menuContainer.querySelector('#gate-username').value || '').trim();
+            if (!name) { showToast('Please enter a username'); return; }
+            try {
+                // Ensure socket init and global reference
+                if ((!window.socket || !window.socket.connected) && typeof initializeLobby === 'function') initializeLobby();
+                if (!window.socket) { showToast('Connecting... Please try again in a second.'); return; }
+                // Ask server to reserve/validate name
+                const ok = await new Promise((resolve) => {
+                    const timeout = setTimeout(() => resolve(false), 4000);
+                    const s = window.socket;
+                    if (!s) { clearTimeout(timeout); console.warn('No socket available for reserveUsername'); resolve(false); return; }
+                    s.emit('reserveUsername', { name });
+                    const handler = (res) => {
+                        clearTimeout(timeout);
+                        s.off('usernameReserveResult', handler);
+                        console.log('[usernameReserveResult]', res);
+                        if (!res?.ok) console.warn('Username rejected', res);
+                        resolve(!!res?.ok);
+                    };
+                    s.on('usernameReserveResult', handler);
+                });
+                if (!ok) { showToast('Name already in use. Choose another.'); return; }
+                // Persist and proceed
+                localStorage.setItem('mp_username', name);
+                window.DEFAULT_MULTIPLAYER_NAME = name;
+                // Defer to allow lobby to initialize cleanly
+                setTimeout(() => this.showMultiplayerMenu(), 50);
+            } catch (e) {
+                console.warn('Username reservation failed', e);
+                showToast('Could not validate name. Try again.');
+            }
+        };
+    }
+
     showMultiplayerMenu() {
         this.currentMenu = 'multiplayer';
         // Initialize lobby if not already done
@@ -148,7 +200,19 @@ class MenuSystem {
 
         // Hide menu and show existing lobby screen
         this.menuContainer.style.display = 'none';
-        document.getElementById('lobby-screen').classList.add('active');
+        // Prefill and hide name inputs in lobby since set at gate
+        const gateName = localStorage.getItem('mp_username') || '';
+        const createNameEl = document.getElementById('create-name');
+        const joinNameEl = document.getElementById('join-name');
+        if (createNameEl) { createNameEl.value = gateName; createNameEl.closest('.form-group').style.display = 'none'; }
+        if (joinNameEl) { joinNameEl.value = gateName; joinNameEl.closest('.form-group').style.display = 'none'; }
+        const lobby = document.getElementById('lobby-screen');
+        if (lobby) {
+            // Ensure lobby screen is displayed and main stats bar hidden
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
+            lobby.classList.add('active');
+        }
     }
 
     showSettings() {
@@ -162,6 +226,10 @@ class MenuSystem {
 
         this.menuContainer.innerHTML = `
             <div class="menu-screen settings-menu">
+                <button class="menu-button back" onclick="menuSystem.showMainMenu()">
+                    <span class="button-icon">⬅️</span>
+                    <span class="button-text">Back</span>
+                </button>
                 <h2 class="menu-title">Settings</h2>
                 
                 <div class="settings-content">
@@ -207,14 +275,9 @@ class MenuSystem {
                     </div>
                 </div>
                 
-                <div class="settings-buttons">
+                <div class="settings-buttons" style="justify-content:center;">
                     <button class="menu-button primary" onclick="menuSystem.saveSettings()">
                         <span class="button-text">Save Settings</span>
-                    </button>
-                    
-                    <button class="menu-button back" onclick="menuSystem.showMainMenu()">
-                        <span class="button-icon">⬅️</span>
-                        <span class="button-text">Back</span>
                     </button>
                 </div>
             </div>
@@ -230,6 +293,10 @@ class MenuSystem {
         this.currentMenu = 'tutorial';
         this.menuContainer.innerHTML = `
             <div class="menu-screen tutorial-menu">
+                <button class="menu-button back" onclick="menuSystem.showMainMenu()">
+                    <span class="button-icon">⬅️</span>
+                    <span class="button-text">Back</span>
+                </button>
                 <h2 class="menu-title">How to Play</h2>
                 
                 <div class="tutorial-content">
@@ -272,11 +339,6 @@ class MenuSystem {
                         </ul>
                     </div>
                 </div>
-                
-                <button class="menu-button back" onclick="menuSystem.showMainMenu()">
-                    <span class="button-icon">⬅️</span>
-                    <span class="button-text">Back</span>
-                </button>
             </div>
         `;
     }

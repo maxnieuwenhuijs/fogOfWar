@@ -8,12 +8,12 @@ function patchGame() {
   if (!window.gameStarted) {
     return;
   }
-  
+
   // Don't patch multiple times
   if (window._gamePatched) {
     return;
   }
-  
+
   // In single player mode, we don't need socket
   if (typeof gameSession === "undefined" || (typeof socket === "undefined" && !window.gameState?.singleplayerMode)) {
     // Reduce console spam
@@ -24,13 +24,13 @@ function patchGame() {
     setTimeout(patchGame, 100);
     return;
   }
-  
+
   window._gamePatched = true;
   console.log("🔧 Patching game...");
   if (typeof gameSession.initialGameState === "undefined") {
     gameSession.initialGameState = null;
   }
-  
+
   // Only set up socket handlers for multiplayer
   if (!window.gameState?.singleplayerMode) {
     if (socket && socket.off) {
@@ -41,26 +41,26 @@ function patchGame() {
     }
 
     socket.on("gameStart", function (receivedGameState) {
-    console.log("🔧 PATCHED - gameStart received:", receivedGameState);
-    if (
-      receivedGameState.currentPlayer === undefined ||
-      receivedGameState.currentPlayer === null
-    ) {
-      console.error("!!! Server missing 'currentPlayer' in 'gameStart' !!!");
-    }
-    gameSession.initialGameState = {
-      currentPhase: receivedGameState.currentPhase,
-      cycleNumber: receivedGameState.cycleNumber,
-      roundNumber: receivedGameState.roundNumber,
-      currentPlayer: receivedGameState.currentPlayer,
-    };
-    console.log("🔧 Captured initial state:", gameSession.initialGameState);
-    if (typeof showScreen === "function" && typeof initGame === "function") {
-      showScreen("game");
-      initGame();
-    } else {
-      console.error("!!! showScreen or initGame not found !!!");
-    }
+      console.log("🔧 PATCHED - gameStart received:", receivedGameState);
+      if (
+        receivedGameState.currentPlayer === undefined ||
+        receivedGameState.currentPlayer === null
+      ) {
+        console.error("!!! Server missing 'currentPlayer' in 'gameStart' !!!");
+      }
+      gameSession.initialGameState = {
+        currentPhase: receivedGameState.currentPhase,
+        cycleNumber: receivedGameState.cycleNumber,
+        roundNumber: receivedGameState.roundNumber,
+        currentPlayer: receivedGameState.currentPlayer,
+      };
+      console.log("🔧 Captured initial state:", gameSession.initialGameState);
+      if (typeof showScreen === "function" && typeof initGame === "function") {
+        showScreen("game");
+        initGame();
+      } else {
+        console.error("!!! showScreen or initGame not found !!!");
+      }
     });
   }
   console.log("🔧 Game patched successfully.");
@@ -70,7 +70,7 @@ function patchGame() {
 window.patchGameReady = true;
 
 // Start patching only when game mode is selected
-window.startGamePatch = function() {
+window.startGamePatch = function () {
   window.gameStarted = true;
   patchGame();
 };
@@ -89,10 +89,10 @@ window.endTurn = function () {
   )
     return;
   console.log(`🔧 Patched endTurn check triggered`);
-  
+
   // Turn should switch after each pawn action - simplified version for now
   console.log("🔧 Patched endTurn: Requesting turn switch after pawn action.");
-  
+
   const gameOver =
     typeof checkWinCondition === "function" ? checkWinCondition() : false;
   if (
@@ -112,16 +112,16 @@ window.endTurn = function () {
 // Helper function to check if a player's pawns can act
 function canPlayerAct(pawns) {
   const activePawns = pawns.filter(p => p?.isActive && p.remainingStamina > 0);
-  
+
   return activePawns.some(pawn => {
     // Check if pawn can move (has valid moves available)
     const possibleMoves = typeof getPossibleMoves === 'function' ? getPossibleMoves(pawn) : [];
     if (possibleMoves.length > 0) return true;
-    
+
     // Check if pawn can attack (has valid attack targets)
     const attackTargets = typeof getValidAttackTargets === 'function' ? getValidAttackTargets(pawn) : [];
     if (attackTargets.length > 0) return true;
-    
+
     return false;
   });
 }
@@ -134,14 +134,14 @@ function fixAllCycles() {
   if (!window.gameStarted) {
     return;
   }
-  
+
   // Don't run multiple times
   if (window._cyclesFixed) {
     return;
   }
-  
+
   console.log("🔧 Setting up complete cycle fix...");
-  
+
   // In single player mode, we don't need socket
   if (
     typeof gameState === "undefined" ||
@@ -150,7 +150,7 @@ function fixAllCycles() {
     setTimeout(fixAllCycles, 500);
     return;
   }
-  
+
   window._cyclesFixed = true;
 
 
@@ -215,6 +215,7 @@ function fixAllCycles() {
       gameState.activePawnsThisCycle[2] = [];
       if (typeof handleCardDefinition === "function") {
         handleCardDefinition();
+        try { if (gameState.currentPhase && gameState.currentPhase.endsWith('DEFINE')) { window.MobileUI?.setDrawerOpen?.(true); } } catch (_) { }
       } else {
         console.error("handleCardDefinition function not found!");
       }
@@ -228,7 +229,7 @@ function fixAllCycles() {
 
 console.log("🔧 Cycle fix ready, will start when game starts.");
 // Don't start immediately, wait for game to start
-window.startCycleFix = function() {
+window.startCycleFix = function () {
   setTimeout(fixAllCycles, 150);
 };
 

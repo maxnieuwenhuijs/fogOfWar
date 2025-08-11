@@ -2,18 +2,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English+SC&display=swap");
 
 body {
-	font-family: "Georgia", serif; /* Fallback serif */
+	font-family: "Georgia", serif;
 	margin: 0;
-	/* Subtle Parchment Background */
-	background-color: #f5eeda; /* Beige */
-	background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%23f5eeda"/><path d="M0 50 Q25 25 50 50 T100 50 M0 100 Q25 75 50 100 T100 100 M50 0 Q75 25 100 0" stroke="%23d3c0a5" stroke-width="1" fill="none" opacity="0.1"/></svg>');
-	color: #4d3a2a; /* Dark Brown */
+	background: linear-gradient(135deg, #f5f3f0 0%, #e8e5e0 100%);
+
+	color: #4d3a2a;
 	line-height: 1.6;
 	padding: 0;
-	overflow-x: hidden; /* Prevent horizontal scroll */
-	align-items: center; /* Add this to potentially help vertical centering */
-	max-width: 1440px; /* Maximum width for laptop screens */
-	margin: 0 auto; /* Center the entire content */
+	overflow-x: hidden;
+	align-items: center;
+	max-width: 1440px;
+	margin: 0 auto;
 }
 
 h1,
@@ -41,54 +40,30 @@ h4 {
 	/* font-size: 1em; */ /* Inherits base font size */
 }
 
-.singleplayer-menu p{
-	color: #ecf0f1;
-    font-size: 1.2em;
-    margin: 20px 0;
-    opacity: 0.8;
-}
+
 
 
 /* Screen management (Kept from original style.css) */
 .screen {
 	display: none;
 	width: 100%;
-	/* padding: 0 20px 20px 20px; */ /* Padding handled by game-area or specific containers */
 	box-sizing: border-box;
+	background: linear-gradient(135deg, #f5f3f0 0%, #e8e5e0 100%);
+	min-height: 100vh;
 }
 
 .screen.active {
 	display: block;
 }
 
-/* Main Title Banner - Reduced Size */
-.main-title-banner {
-	background-color: #2c3e50; /* Dark Napoleonic Blue */
-	color: #f1c40f; /* Gold */
-	padding: 8px 0;
-	text-align: center;
-	margin-bottom: 0;
-	border-bottom: 2px solid #f39c12; /* Darker Gold */
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-	font-family: "IM Fell English SC", serif; /* Historical Script-like */
-	font-size: 1.2em; /* Smaller title */
-	width: 100%; /* Ensure it spans full width */
-}
-.main-title-banner h1 {
-	margin: 0;
-	color: #f1c40f;
-	text-shadow: 1px 1px 2px #000;
-	font-size: 2.0em;
-}
-
 /* Game Stats Bar */
 .game-stats-bar {
-	background-color: #34495e;
-	color: #ecf0f1;
+	background: #34495e;
+	/* color: #34495e; */
 	padding: 6px 0;
 	text-align: center;
 	margin-bottom: 15px;
-	border-bottom: 1px solid #95a5a6;
+	border-bottom: 1px solid #bda88e;
 	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 	font-size: 1.0em;
 	width: 100%;
@@ -119,25 +94,192 @@ p {
 	margin-bottom: 1em;
 }
 
-/* --- Lobby styling (Kept mostly from original, inputs themed) --- */
+/* --- Lobby styling --- */
 .lobby-container {
 	display: flex;
-	justify-content: space-between;
-	background-color: white; /* Keep white for now */
-	border-radius: 8px;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	padding: 30px;
+	flex-direction: column;
+	background: transparent;
+	padding: 20px;
 	margin: 20px auto;
-	max-width: 800px;
+	max-width: 600px;
+	gap: 20px;
 }
-.lobby-section {
+/* New lobby top buttons */
+.lobby-top-buttons {
+	display: flex;
+	gap: 20px;
+	justify-content: center;
+	margin-bottom: 10px;
+}
+
+.lobby-action-btn {
 	flex: 1;
-	padding: 0 20px;
+	max-width: 250px;
+	font-family: "Cinzel", serif;
+	background-color: #34495e;
+	color: #ecf0f1;
+	border: 2px solid #2c3e50;
+	border-radius: 8px;
+	padding: 20px 30px;
+	font-size: 1.2em;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15);
+	font-weight: 600;
 }
-.lobby-divider {
-	width: 1px;
-	background-color: #ddd;
-	margin: 0 20px;
+
+.lobby-action-btn:hover {
+	background-color: #4a6ea9;
+	border-color: #3a5a8c;
+	box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+	transform: translateY(-2px);
+}
+
+.lobby-action-btn:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Join game form */
+.join-game-form {
+	background: rgba(255, 250, 240, 0.95);
+	border: 2px solid #bda88e;
+	padding: 20px;
+	border-radius: 8px;
+	margin-bottom: 15px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.join-game-form .form-row {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+.join-game-form input[type="text"] {
+	flex: 1;
+	max-width: 200px;
+	text-transform: uppercase;
+	font-family: monospace;
+	font-size: 1.1em;
+	letter-spacing: 2px;
+	text-align: center;
+}
+
+.join-game-form .primary-btn,
+.join-game-form .secondary-btn {
+	padding: 10px 20px;
+	font-size: 0.95em;
+}
+
+.join-game-form .secondary-btn {
+	background-color: #7f8c8d;
+	border-color: #6c7a89;
+}
+
+.join-game-form .secondary-btn:hover {
+	background-color: #95a5a6;
+}
+
+/* Create game options */
+.create-game-options {
+	background: rgba(255, 250, 240, 0.95);
+	border: 2px solid #bda88e;
+	padding: 20px;
+	border-radius: 8px;
+	margin-bottom: 15px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.create-game-options h3 {
+	margin: 0 0 15px 0;
+	text-align: center;
+	color: #4d3a2a;
+	font-size: 1.2em;
+}
+
+.create-game-options .form-row {
+	display: flex;
+	gap: 10px;
+	justify-content: center;
+}
+
+.create-game-options .radio-group {
+	margin-bottom: 5px;
+	justify-content: center;
+}
+
+/* Public games list */
+.lobby-games-list {
+	flex: 1;
+}
+
+.lobby-games-list h2 {
+	font-size: 1.3em;
+	text-align: center;
+	margin-bottom: 15px;
+}
+
+.active-games-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 15px;
+	padding: 0 10px;
+}
+
+.refresh-btn {
+	background: transparent;
+	border: none;
+	font-size: 1.3em;
+	cursor: pointer;
+	padding: 5px;
+	transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+	transform: rotate(180deg);
+}
+
+.active-games-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	max-height: 400px;
+	overflow-y: auto;
+	border: 2px solid #bda88e;
+	border-radius: 8px;
+	background: rgba(255, 250, 240, 0.8);
+}
+
+.radio-group { display: flex; gap: 12px; flex-wrap: wrap; }
+.radio-group label { display: flex; align-items: center; gap: 6px; font-weight: normal; }
+
+/* Active games list items */
+.active-games-list li { 
+	display: flex; 
+	justify-content: space-between; 
+	align-items: center; 
+	padding: 12px 14px; 
+	border-bottom: 1px solid #d3c0a5; 
+}
+.active-games-list li:last-child { border-bottom: none; }
+.active-games-list .meta { font-size: 0.95em; color: #4d3a2a; }
+.active-games-list button { 
+	padding: 8px 12px; 
+	font-size: 0.95em;
+	background-color: #34495e;
+	color: #ecf0f1;
+	border: 1px solid #2c3e50;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+.active-games-list button:hover {
+	background-color: #4a6ea9;
+	border-color: #3a5a8c;
 }
 .form-group {
 	margin-bottom: 20px;
@@ -244,12 +386,13 @@ input[type="number"] {
 
 /* Apply action-button style to lobby buttons */
 .lobby-container .primary-btn {
-	width: 100%; /* Restore full width for lobby */
+	width: auto; /* Auto width for inline buttons */
 }
 
-/* --- Waiting screen (Kept from original, spinner themed) --- */
+/* --- Waiting screen --- */
 .waiting-container {
-	background-color: white; /* Keep white for now */
+	background: rgba(255, 250, 240, 0.95);
+	border: 2px solid #bda88e;
 	border-radius: 8px;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 	padding: 30px;
@@ -326,16 +469,16 @@ input[type="number"] {
 
 /* Panel Styling (Chat, Cards, Sidebar) (From test.css) */
 .ui-panel {
-	background-color: rgba(222, 207, 184, 0.9); /* More opaque parchment */
-	border: 2px solid #8b694e; /* Darker wood-like border */
-	border-radius: 5px;
+	background: rgba(255, 250, 240, 0.95);
+	border: 2px solid #bda88e;
+	border-radius: 8px;
 	padding: 15px;
-	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	box-sizing: border-box;
-	backdrop-filter: blur(2px); /* Subtle blur for background */
+	backdrop-filter: blur(2px);
 	display: flex;
 	flex-direction: column;
-	position: relative; /* For potential pseudo-elements */
+	position: relative;
 	margin-bottom: 10px; /* Add space between panels */
 }
 
@@ -400,9 +543,10 @@ input[type="number"] {
 }
 /* --- End Card Flip Keyframes --- */
 
-/* --- Game Lobby screen (Kept from original) --- */
+/* --- Game Lobby screen --- */
 .game-lobby-container {
-	background-color: white; /* Keep white for now */
+	background: rgba(255, 250, 240, 0.95);
+	border: 2px solid #bda88e;
 	border-radius: 8px;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 	padding: 30px;
@@ -416,7 +560,8 @@ input[type="number"] {
 	margin-bottom: 30px;
 }
 .player-card {
-	background-color: #f8f8f8;
+	background: rgba(255, 250, 240, 0.9);
+	border: 1px solid #d3c0a5;
 	border-radius: 6px;
 	padding: 15px;
 	width: 45%;
@@ -458,7 +603,7 @@ input[type="number"] {
 /* --- Game Area Layout for Mobile Landscape --- */
 .game-area {
 	display: grid;
-	grid-template-columns: 200px 1fr 350px; /* Left sidebar, Board, Right cards - wider card area */
+	grid-template-columns: 200px 1fr 350px; /* desktop default */
 	grid-template-rows: auto;
 	grid-template-areas: "left board cards";
 	gap: 15px;
@@ -466,10 +611,25 @@ input[type="number"] {
 	padding: 10px;
 	align-items: start;
 	justify-content: center;
-	max-width: 1400px; /* Laptop-friendly maximum width */
+	max-width: 1400px;
 	width: 100%;
 	min-height: 100vh;
 	box-sizing: border-box;
+}
+
+.mobile-topbar {
+  display: none;
+}
+.topbar-btn {
+  background: #34495e; color: #ecf0f1; border: none; border-radius: 6px; padding: 6px 10px; font-size: 1.1em;
+}
+.topbar-title { display: none; }
+
+.mobile-drawer {
+  position: relative;
+}
+.mobile-drawer .drawer-handle {
+  display: none;
 }
 
 /* --- Left Column (Chat + Game Stats + Medal) --- */
@@ -549,11 +709,11 @@ input[type="number"] {
 
 /* --- Chat Panel (Middle of Left Column) --- */
 #chat-panel {
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-	min-height: 150px;
-	font-size: 0.8em;
+  flex-grow: 1;
+  display: none; /* hidden by default on all screens */
+  flex-direction: column;
+  min-height: 150px;
+  font-size: 0.8em;
 }
 
 #chat-panel h3 {
@@ -649,13 +809,8 @@ input[type="number"] {
 
 /* --- Board Background Wrapper --- */
 #board-background-wrapper {
-	background-image: url(assets/images/background.png);
-	background-size: contain;
-	background-position: center center;
-	background-repeat: no-repeat;
-	border-radius: 5px;
 	width: 100%;
-  max-width: min(90vh, 100%);
+	max-width: min(90vh, 100%);
 	aspect-ratio: 1;
 	display: flex;
 	justify-content: center;
@@ -665,10 +820,26 @@ input[type="number"] {
 	position: relative;
 }
 
+/* Background layer that's slightly larger */
+.board-background-layer {
+	position: absolute;
+	top: -5%;
+	left: -5%;
+	width: 110%;
+	height: 110%;
+	background-image: url(assets/images/background.png);
+	background-size: contain;
+	background-position: center center;
+	background-repeat: no-repeat;
+	border-radius: 8px;
+	z-index: 0;
+	pointer-events: none;
+}
+
 /* --- Game Container (Board Grid) --- */
 #game-container {
 	box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
-	border-radius: 25px;
+	border-radius: 5px;
 	line-height: 0;
 	width: min(85vmin, 100%);
 	height: min(85vmin, 100%);
@@ -677,6 +848,7 @@ input[type="number"] {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	z-index: 1;
 }
 
 #game-container canvas {
@@ -713,6 +885,7 @@ input[type="number"] {
 	padding-right: 8px;
 	box-sizing: border-box;
 	scrollbar-width: thin;
+	pointer-events: auto; /* Ensure interactivity on desktop */
 }
 
 /* Custom scrollbar styling for card area */
@@ -829,7 +1002,8 @@ input[type="number"] {
 	width: 35px;
 	padding: 3px 4px;
 	margin-left: 3px;
-	font-size: 0.8em;
+	    font-size: 1em;
+    display: block;
 }
 
 .card-sum {
@@ -876,7 +1050,7 @@ span.card-sum[style*="color: red"] {
 	border-radius: 6px;
 	padding: 6px;
 	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-	min-height: 80px;
+	min-height: 100px;
 	display: flex;
 	flex-direction: column;
 	font-family: "Georgia", serif;
@@ -937,7 +1111,7 @@ span.card-sum[style*="color: red"] {
 	flex-direction: column;
 	justify-content: space-around;
 	align-items: center;
-	font-size: 0.9em;
+	font-size: 1em;
 	color: #4d3a2a;
 	line-height: 1.2;
 	text-align: center;
@@ -1471,25 +1645,75 @@ span.card-sum[style*="color: red"] {
 /* === RESPONSIVE ADJUSTMENTS FOR MOBILE LANDSCAPE === */
 
 /* Portrait Mobile - Stack Layout */
-@media (max-width: 1024px) and (orientation: portrait) {
+@media (max-width: 768px) and (orientation: portrait) {
+	/* Slim stats bar and keep it sticky at the very top */
+	.game-stats-bar { padding: 4px 0; margin-bottom: 6px; position: sticky; top: 0; z-index: 12; }
+	.game-stats-bar .stats-content { gap: 12px; }
+
+	/* Convert topbar into a zero-height container; buttons float (fixed) under stats bar */
+  .mobile-topbar { display: block; height: 0; padding: 0; background: transparent; position: relative; z-index: 19; }
+  .topbar-btn { padding: 4px 8px; font-size: 0.9em; border-radius: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+  /* Fallback positions; JS will refine based on stats bar height */
+    #btn-chat { position: fixed; top: 36px; left: 10px; z-index: 1000; pointer-events: auto; }
+    #btn-settings { position: fixed; top: 36px; right: 10px; z-index: 1000; pointer-events: auto; }
 	.game-area {
 		grid-template-columns: 1fr;
-		grid-template-rows: auto auto auto;
+		grid-template-rows: auto auto;
 		grid-template-areas: 
 			"board"
-			"left"
 			"cards";
-		gap: 10px;
-		padding: 5px;
+		gap: 2px;
+		padding: 2px;
 	}
 
-	#left-column {
-		max-height: none;
+	#left-column { display: none; }
+
+    #board-background-wrapper {
+		max-width: 100vw;
+        height: min(100vw, calc(100vh - 60px)); /* maximize board */
+        position: relative;
+        z-index: 10; /* ensure above background elements */
 	}
 
-	#board-background-wrapper {
-		max-width: 90vw;
+	/* Cards become bottom drawer */
+    #card-ui-area.mobile-drawer {
+		position: fixed;
+		left: 0; right: 0; bottom: 0;
+		max-height: 90vh; /* cover almost full screen when opened */
+		transform: translateY(88%); /* mostly hidden by default */
+		transition: transform 250ms ease;
+        z-index: 5; /* low when closed so canvas receives events */
+		margin: 0 auto;
+		width: 100%;
+		pointer-events: none; /* allow clicks through when closed */
 	}
+    #card-ui-area.mobile-drawer.open { transform: translateY(0%); pointer-events: auto; z-index: 19; }
+    #card-ui-area.mobile-drawer .drawer-handle { display: block; text-align: center; font-weight: bold; cursor: pointer; margin-bottom: 6px; }
+    /* Floating handle so it's always tappable even when drawer ignores pointer events */
+    /* removed legacy drawer-handle */
+
+	/* Chat becomes overlay panel toggled by button */
+	#chat-panel { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 20; display: none; max-height: 60vh; }
+	#chat-panel.open { display: flex; }
+  /* Enhance overlay elevation for chat and settings panels */
+  #chat-panel,
+  #game-info-panel {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    border: 2px solid rgba(139, 105, 78, 0.6);
+    background-color: rgba(222, 207, 184, 0.96);
+  }
+
+  /* Slightly smaller panels/padding on mobile */
+  .ui-panel { padding: 8px; }
+  /* Mobile typography scale-down for menu and UI */
+  .game-title { font-size: 2.6em; letter-spacing: 3px; }
+  .game-subtitle { font-size: 1.1em; }
+  .menu-title { font-size: 2.0em; }
+  .menu-button { font-size: 1.0em; padding: 12px 20px; }
+  .menu-button.primary { min-height: 52px; }
+  .ui-panel h3 { font-size: 1.05em; }
+  .game-stats-bar { font-size: 0.9em; }
 }
 
 /* Landscape Mobile - Optimized 3-column */
@@ -1537,9 +1761,8 @@ span.card-sum[style*="color: red"] {
 	}
 
 	.card-item {
-		min-height: 60px;
 		padding: 4px;
-		font-size: 0.7em;
+		font-size: 0.9em;
 	}
 
 	.card-inputs {
@@ -1554,15 +1777,6 @@ span.card-sum[style*="color: red"] {
 
 /* Very Small Landscape Screens */
 @media (max-width: 640px) and (orientation: landscape) {
-	.main-title-banner {
-		padding: 8px 0;
-		font-size: 1.2em;
-	}
-
-	.main-title-banner h1 {
-		font-size: 0.9em;
-	}
-
 	.game-stats-bar {
 		font-size: 0.8em;
 		padding: 4px 0;
@@ -1602,6 +1816,29 @@ span.card-sum[style*="color: red"] {
 		min-height: 40px;
 		font-size: 1.4em;
 	}
+}
+
+/* --- Mobile portrait typography overrides placed at end to win cascade --- */
+@media (max-width: 768px) and (orientation: portrait) {
+  .game-title { font-size: 2.6em !important; letter-spacing: 3px !important; }
+  .game-subtitle { font-size: 1.1em !important; }
+  .menu-title { font-size: 2.0em !important; }
+  .menu-button { font-size: 1.0em !important; padding: 12px 20px !important; }
+  .menu-button.primary { min-height: 52px !important; }
+  .ui-panel h3 { font-size: 1.05em !important; }
+  .game-stats-bar { font-size: 0.9em !important; }
+
+  /* Multiplayer/menus: column layout and tighter spacing on mobile portrait */
+  .lobby-container { display: flex; flex-direction: column; gap: 12px; padding: 10px; max-width: 96vw; }
+  .lobby-top-buttons { flex-direction: column; gap: 10px; }
+  .lobby-action-btn { max-width: 100%; padding: 15px 20px; }
+  .waiting-container { padding: 16px; margin: 12px auto; max-width: 90vw; }
+  .game-lobby-container { padding: 16px; margin: 12px auto; max-width: 90vw; }
+  .players-info { flex-direction: column; gap: 12px; }
+  .player-card { width: 100%; }
+  .vs-label { margin: 6px 0; }
+  .lobby-actions { gap: 10px; }
+  #ready-btn { width: 100%; max-width: none; }
 }
 
 /* ============================= */
@@ -1709,11 +1946,12 @@ span.card-sum[style*="color: red"] {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+	background: linear-gradient(135deg, #f5f3f0 0%, #e8e5e0 100%);
 	background-image: url('assets/images/background.png');
 	background-size: cover;
 	background-position: center;
-	background-blend-mode: overlay;
+	background-blend-mode: multiply;
+	opacity: 0.98;
 	z-index: 9999;
 	display: flex;
 	justify-content: center;
@@ -1721,13 +1959,15 @@ span.card-sum[style*="color: red"] {
 }
 
 .menu-screen {
-	background: rgba(0, 0, 0, 0.8);
-	border-radius: 20px;
+	background: rgba(255, 250, 240, 0.95);
+	border: 2px solid #bda88e;
+	border-radius: 12px;
 	padding: 40px;
 	max-width: 800px;
 	width: 90%;
-	box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 	animation: menuFadeIn 0.5s ease;
+	position: relative;
 }
 
 @keyframes menuFadeIn {
@@ -1743,8 +1983,8 @@ span.card-sum[style*="color: red"] {
 .game-title {
 	font-family: "Cinzel", serif;
 	font-size: 4em;
-	color: #f1c40f;
-	text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+	color: #34495e;
+	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 	margin: 0;
 	letter-spacing: 5px;
 }
@@ -1752,7 +1992,7 @@ span.card-sum[style*="color: red"] {
 .game-subtitle {
 	font-family: "IM Fell English SC", serif;
 	font-size: 1.5em;
-	color: #bdc3c7;
+	color: #7f8c8d;
 	margin-top: 10px;
 }
 
@@ -1764,8 +2004,8 @@ span.card-sum[style*="color: red"] {
 }
 
 .menu-button {
-	background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-	border: 2px solid #f39c12;
+	background: #34495e;
+	border: 2px solid #2c3e50;
 	color: #ecf0f1;
 	padding: 15px 30px;
 	font-size: 1.2em;
@@ -1781,10 +2021,11 @@ span.card-sum[style*="color: red"] {
 }
 
 .menu-button:hover {
-	background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
-	color: #2c3e50;
+	background: #4a6ea9;
+	border-color: #3a5a8c;
+	color: #ecf0f1;
 	transform: translateY(-2px);
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+	box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
 }
 
 .menu-button.primary {
@@ -1793,24 +2034,43 @@ span.card-sum[style*="color: red"] {
 }
 
 .menu-button.secondary {
-	background: linear-gradient(135deg, #2c3e50 0%, #1a2332 100%);
-	border-color: #95a5a6;
+	background: #7f8c8d;
+	border-color: #6c7a89;
 }
 
 .menu-button.secondary:hover {
-	background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-	border-color: #bdc3c7;
+	background: #95a5a6;
+	border-color: #7f8c8d;
 	color: #ecf0f1;
 }
 
 .menu-button.back {
-	background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
-	border-color: #e74c3c;
-	margin-top: 20px;
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	background: rgba(149, 165, 166, 0.3);
+	border: 1px solid rgba(127, 140, 141, 0.3);
+	padding: 8px 15px;
+	font-size: 0.9em;
+	min-height: auto;
+	margin: 0;
+	box-shadow: none;
+	color: #384d61;
 }
 
 .menu-button.back:hover {
-	background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+	background: rgba(127, 140, 141, 0.5);
+	border-color: rgba(108, 122, 137, 0.5);
+	transform: translateY(0);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.menu-button.back .button-icon {
+	font-size: 1.1em;
+}
+
+.menu-button.back .button-text {
+	font-size: 0.9em;
 }
 
 .button-icon {
@@ -1820,7 +2080,7 @@ span.card-sum[style*="color: red"] {
 .menu-footer {
 	text-align: center;
 	margin-top: 30px;
-	color: #7f8c8d;
+	color: #95a5a6;
 }
 
 .version-text {
@@ -1830,11 +2090,11 @@ span.card-sum[style*="color: red"] {
 /* Menu Title */
 .menu-title {
 	font-family: "Cinzel", serif;
-	color: #f1c40f;
+	color: #34495e;
 	text-align: center;
 	font-size: 2.5em;
 	margin-bottom: 30px;
-	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Difficulty Selection */
@@ -1843,30 +2103,41 @@ span.card-sum[style*="color: red"] {
 }
 
 .difficulty-section h3 {
-	color: #ecf0f1;
+	color: #34495e;
 	text-align: center;
 	margin-bottom: 20px;
 }
 
 .difficulty-buttons {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 .difficulty-button {
-	background: rgba(52, 73, 94, 0.8);
-	border: 2px solid #34495e;
-	border-radius: 15px;
-	padding: 20px;
-	cursor: pointer;
-	transition: all 0.3s ease;
-	text-align: center;
+    background: rgba(255, 250, 240, 0.8);
+    border: 2px solid #bda88e;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+/* Mobile portrait: adjust difficulty button sizing */
+@media (max-width: 1024px) and (orientation: portrait) {
+  .difficulty-buttons { gap: 12px; }
+  .difficulty-button { padding: 12px; border-radius: 12px; }
+  .difficulty-icon { font-size: 2em; }
+  .difficulty-name { font-size: 1.1em; }
+  .difficulty-desc { font-size: 0.85em; }
 }
 
 .difficulty-button:hover {
-	background: rgba(52, 73, 94, 1);
-	border-color: #f1c40f;
+	background: rgba(189, 168, 142, 0.2);
+	border-color: #8b694e;
 	transform: scale(1.05);
 }
 
@@ -1878,12 +2149,12 @@ span.card-sum[style*="color: red"] {
 .difficulty-name {
 	font-family: "Cinzel", serif;
 	font-size: 1.3em;
-	color: #f1c40f;
+	color: #34495e;
 	margin-bottom: 5px;
 }
 
 .difficulty-desc {
-	color: #bdc3c7;
+	color: #7f8c8d;
 	font-size: 0.9em;
 }
 
@@ -1893,14 +2164,15 @@ span.card-sum[style*="color: red"] {
 }
 
 .settings-section {
-	background: rgba(52, 73, 94, 0.3);
+	background: rgba(189, 168, 142, 0.1);
+	border: 1px solid #d3c0a5;
 	border-radius: 10px;
 	padding: 20px;
 	margin-bottom: 20px;
 }
 
 .settings-section h3 {
-	color: #f1c40f;
+	color: #34495e;
 	margin-bottom: 15px;
 }
 
@@ -1991,16 +2263,18 @@ input:checked + .toggle-slider:before {
 }
 
 .tutorial-section {
-	background: rgba(52, 73, 94, 0.3);
+	background: rgba(189, 168, 142, 0.1);
+	border: 1px solid #d3c0a5;
 	border-radius: 10px;
 	padding: 20px;
 	margin-bottom: 20px;
-	color: #ecf0f1;
+	color: #4d3a2a;
 }
 
 .tutorial-section h3 {
-	color: #f1c40f;
+	color: #34495e;
 	margin-bottom: 10px;
+	font-weight: 600;
 }
 
 .tutorial-section ul {

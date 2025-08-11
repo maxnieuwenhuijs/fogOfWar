@@ -8,36 +8,36 @@ class PhysicsTestPanel {
             powerDivisor: 100,
             maxPower: 15,
             minPowerThreshold: 1,
-            
+
             // Force settings
             baseForce: 7.5,
             forceMultiplier: 5,
-            
+
             // Enemy pawn physics
             enemyDensity: 0.0071,
             enemyFrictionAir: 0.01,
             enemyRestitution: 0.75,
             enemyFriction: 0.2,
-            
+
             // Attacker physics
             attackerDensity: 0.04,
             attackerSpeed: 14,
             attackerFrictionAir: 0,
-            
+
             // Animation
             maxFrames: 160,
             fadeStartSpeed: 5,
             fadeRate: 0.1
         };
-        
+
         this.createPanel();
     }
-    
+
     createPanel() {
         // Remove existing panel if any
         const existing = document.getElementById('physics-test-panel');
         if (existing) existing.remove();
-        
+
         this.panel = document.createElement('div');
         this.panel.id = 'physics-test-panel';
         this.panel.style.cssText = `
@@ -57,7 +57,7 @@ class PhysicsTestPanel {
             width: 350px;
             display: none;
         `;
-        
+
         this.panel.innerHTML = `
             <h3 style="margin-top: 0; color: #e7c07d; text-align: center;">⚡ Physics Test Panel ⚡</h3>
             <p style="text-align: center; margin-bottom: 20px;">Adjust values and test in real-time!</p>
@@ -91,16 +91,16 @@ class PhysicsTestPanel {
                 <small>Press P to toggle this panel</small>
             </div>
         `;
-        
+
         document.body.appendChild(this.panel);
-        
+
         // Create sliders
         this.createSliders();
-        
+
         // Setup event handlers
         document.getElementById('physics-reset-btn').onclick = () => this.resetToDefaults();
         document.getElementById('physics-copy-btn').onclick = () => this.copyValues();
-        
+
         // Keyboard shortcut
         document.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.altKey) {
@@ -109,10 +109,10 @@ class PhysicsTestPanel {
             }
         });
     }
-    
+
     createSliders() {
         const container = document.getElementById('physics-sliders');
-        
+
         const sliderGroups = [
             {
                 title: '🎯 Power Settings',
@@ -155,35 +155,35 @@ class PhysicsTestPanel {
                 ]
             }
         ];
-        
+
         container.innerHTML = sliderGroups.map(group => `
             <div style="margin-bottom: 20px;">
                 <h4 style="color: #4a6ea9; margin-bottom: 10px;">${group.title}</h4>
                 ${group.sliders.map(slider => this.createSliderHTML(slider)).join('')}
             </div>
         `).join('');
-        
+
         // Add event listeners
         sliderGroups.forEach(group => {
             group.sliders.forEach(slider => {
                 const input = document.getElementById(`slider-${slider.key}`);
                 const value = document.getElementById(`value-${slider.key}`);
-                
+
                 input.value = this.settings[slider.key];
                 value.textContent = this.formatValue(this.settings[slider.key], slider.step);
-                
+
                 input.oninput = (e) => {
                     const val = parseFloat(e.target.value);
                     this.settings[slider.key] = val;
                     value.textContent = this.formatValue(val, slider.step);
-                    
+
                     // Apply changes to physics system
                     this.applySettings();
                 };
             });
         });
     }
-    
+
     createSliderHTML(config) {
         return `
             <div style="margin-bottom: 15px;">
@@ -203,12 +203,12 @@ class PhysicsTestPanel {
             </div>
         `;
     }
-    
+
     formatValue(value, step) {
         const decimals = step < 1 ? step.toString().split('.')[1]?.length || 1 : 0;
         return value.toFixed(decimals);
     }
-    
+
     applySettings() {
         // Apply settings to physics attack system if it exists
         if (window.physicsAttackSystem) {
@@ -219,7 +219,7 @@ class PhysicsTestPanel {
             console.warn('Physics attack system not found - settings not applied');
         }
     }
-    
+
     resetToDefaults() {
         this.settings = {
             powerDivisor: 100,
@@ -238,7 +238,7 @@ class PhysicsTestPanel {
             fadeStartSpeed: 5,
             fadeRate: 0.1
         };
-        
+
         // Update all sliders
         Object.keys(this.settings).forEach(key => {
             const input = document.getElementById(`slider-${key}`);
@@ -248,14 +248,14 @@ class PhysicsTestPanel {
                 value.textContent = this.formatValue(this.settings[key], parseFloat(input.step));
             }
         });
-        
+
         this.applySettings();
         showToast('Physics settings reset to defaults');
     }
-    
+
     copyValues() {
         const code = `// Physics Settings\nconst physicsSettings = ${JSON.stringify(this.settings, null, 4)};`;
-        
+
         if (navigator.clipboard) {
             navigator.clipboard.writeText(code).then(() => {
                 showToast('Settings copied to clipboard!');
@@ -268,21 +268,21 @@ class PhysicsTestPanel {
             showToast('Settings logged to console');
         }
     }
-    
+
     toggle() {
         this.isVisible = !this.isVisible;
         this.panel.style.display = this.isVisible ? 'block' : 'none';
-        
+
         if (this.isVisible) {
             showToast('Physics Test Panel opened (Press P to close)');
         }
     }
-    
+
     show() {
         this.isVisible = true;
         this.panel.style.display = 'block';
     }
-    
+
     hide() {
         this.isVisible = false;
         this.panel.style.display = 'none';

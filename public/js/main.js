@@ -350,9 +350,10 @@ async function initGame() {
             app.stage.scale.set(scale, scale);
             app.stage.x = (app.screen.width - BOARD_WIDTH * scale) / 2;
             app.stage.y = (app.screen.height - BOARD_HEIGHT * scale) / 2;
-            // Update hit area to match the new screen rectangle so pointer mapping is correct at all sizes
+            // Set stage hitArea in STAGE-LOCAL coordinates, not screen pixels,
+            // so Pixi hit testing works even when the stage is scaled/translated
             try {
-                app.stage.hitArea = app.screen; // PIXI.Rectangle updated by renderer.resize
+                app.stage.hitArea = new PIXI.Rectangle(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
             } catch (_) { }
         }
 
@@ -384,7 +385,7 @@ async function initGame() {
         // Ensure canvas is on top and receives pointer events across layouts/zoom
         try {
             canvasElement.style.position = 'relative';
-            canvasElement.style.zIndex = '5';
+            canvasElement.style.zIndex = '15';
             canvasElement.style.pointerEvents = 'auto';
             canvasElement.style.transform = 'translateZ(0)'; // stabilize rasterization at some DPRs
         } catch (_) { }
@@ -397,7 +398,25 @@ async function initGame() {
                 const scale = app.stage?.scale?.x || 1;
                 const sx = (gx - (app.stage?.x || 0)) / scale;
                 const sy = (gy - (app.stage?.y || 0)) / scale;
-                if (window.SpLogger) SpLogger.log('pointer.debug', { client: { x: e.clientX, y: e.clientY }, localCanvas: { x: gx, y: gy }, stage: { x: sx, y: sy }, rect: { w: Math.round(r.width), h: Math.round(r.height) }, dpr: window.devicePixelRatio || 1 });
+                const payload = { type: 'down', client: { x: e.clientX, y: e.clientY }, localCanvas: { x: gx, y: gy }, stage: { x: sx, y: sy }, rect: { w: Math.round(r.width), h: Math.round(r.height) }, dpr: window.devicePixelRatio || 1, stagePos: { x: app.stage?.x, y: app.stage?.y }, scale };
+                if (window.SpLogger) SpLogger.log('pointer.debug', payload);
+                try { console.log('[pointer.debug]', payload); } catch (_) { }
+            }, { passive: true });
+            canvasElement.addEventListener('pointerup', (e) => {
+                const r = canvasElement.getBoundingClientRect();
+                const gx = e.clientX - r.left;
+                const gy = e.clientY - r.top;
+                const scale = app.stage?.scale?.x || 1;
+                const sx = (gx - (app.stage?.x || 0)) / scale;
+                const sy = (gy - (app.stage?.y || 0)) / scale;
+                const payload = { type: 'up', client: { x: e.clientX, y: e.clientY }, localCanvas: { x: gx, y: gy }, stage: { x: sx, y: sy } };
+                if (window.SpLogger) SpLogger.log('pointer.debug', payload);
+                try { console.log('[pointer.debug]', payload); } catch (_) { }
+            }, { passive: true });
+            canvasElement.addEventListener('click', (e) => {
+                const payload = { targetId: e.target?.id || null, class: e.target?.className || null, path0: e.composedPath?.()[0]?.tagName || null };
+                if (window.SpLogger) SpLogger.log('pointer.click', payload);
+                try { console.log('[pointer.click]', payload); } catch (_) { }
             }, { passive: true });
         } catch (_) { }
 
@@ -405,6 +424,11 @@ async function initGame() {
         app.stage.addChild(highlightContainer);
         app.stage.eventMode = 'static'; app.stage.hitArea = app.screen;
         app.stage.on('pointerdown', (event) => {
+            try {
+                const tgt = event.target;
+                const info = { tgtType: typeof tgt, name: tgt?.name || null, isStage: tgt === app.stage, hasPawnRef: !!tgt?.pawnRef };
+                console.log('[stage.pointerdown]', info);
+            } catch (_) { }
             if (event.target === app.stage) {
                 if (typeof onBackgroundClick === 'function') onBackgroundClick(event);
                 else console.warn("onBackgroundClick not defined");
@@ -429,6 +453,23 @@ async function initGame() {
         // Ensure pointer mapping stays accurate when layout changes
         const ro = new ResizeObserver(() => resizeCanvas('observer'));
         try { ro.observe(gameContainer); } catch (_) { }
+
+        // Global diagnostic: log topmost element and parent chain at pointer position to detect overlay blocking
+        try {
+            const logHitTest = (e) => {
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                const chain = [];
+                let cur = el;
+                while (cur && chain.length < 6) {
+                    chain.push({ tag: cur.tagName, id: cur.id || null, class: cur.className || null, z: getComputedStyle(cur).zIndex });
+                    cur = cur.parentElement;
+                }
+                const payload = { x: e.clientX, y: e.clientY, chain };
+                if (window.SpLogger) SpLogger.log('pointer.hittest', payload);
+                try { console.log('[pointer.hittest]', payload); } catch (_) { }
+            };
+            window.addEventListener('pointerdown', logHitTest, { passive: true });
+        } catch (_) { }
 
         app.stage.on('pointerup', (event) => {
             if (app.stage.isDraggingAttack && physicsAttackSystem) {
@@ -520,6 +561,8 @@ async function initGame() {
         if (gameState.currentPhase?.endsWith('DEFINE')) {
             console.log('Triggering card definition handler (after delay)...');
             if (typeof handleCardDefinition === 'function') handleCardDefinition(); else console.error("handleCardDefinition missing!");
+            // Auto-open the drawer in DEFINE on load
+            try { window.MobileUI?.setDrawerOpen?.(true); } catch (_) { }
         } else if (gameState.currentPhase === 'ACTION') {
             console.log('Triggering action phase handler (after delay)...');
             if (typeof handlePlayerTurn === 'function') handlePlayerTurn(); else console.error("handlePlayerTurn missing!");

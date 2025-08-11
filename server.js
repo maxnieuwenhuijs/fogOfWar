@@ -96,6 +96,8 @@ const ALL_TARGET_HAVENS_P2 = [
 
 // Game rooms storage
 const gameRooms = new Map();
+// Track reserved usernames -> socket.id
+const usernameToSocket = new Map();
 
 // --- Helper Functions ---
 function generateRoomCode() {
@@ -552,11 +554,55 @@ function startNewCycle(io, room, roomCode) {
 io.on("connection", (socket) => {
   console.log(`New client connected: ${socket.id}`);
 
+  // Track usernames to avoid duplicates
+  socket.on('reserveUsername', ({ name }) => {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) { socket.emit('usernameReserveResult', { ok: false, reason: 'empty' }); return; }
+    // Check reserved map
+    let existing = usernameToSocket.get(trimmed);
+    // Clean up stale reservation if the socket no longer exists
+    if (existing && !io.sockets.sockets.get(existing)) {
+      console.log(`[auth] Cleaning stale reservation for '${trimmed}', staleSocket=${existing}`);
+      usernameToSocket.delete(trimmed);
+      existing = undefined;
+    }
+    if (existing && existing !== socket.id) {
+      console.log(`[auth] Reject '${trimmed}' for ${socket.id}: currently reserved by ${existing}`);
+      socket.emit('usernameReserveResult', { ok: false, reason: 'in_use', holder: existing });
+      return;
+    }
+    // Check across active rooms whether name is in use by any other connected player
+    for (const [code, room] of gameRooms) {
+      const p1InUse = (room.player1?.name === trimmed && room.player1?.id !== socket.id);
+      const p2InUse = (room.player2?.name === trimmed && room.player2?.id !== socket.id);
+      if (p1InUse || p2InUse) {
+        console.log(`[auth] Reject '${trimmed}' for ${socket.id}: already used in room ${code}`);
+        socket.emit('usernameReserveResult', { ok: false, reason: 'in_use_room', room: code });
+        return;
+      }
+    }
+    // Release previous reservation for this socket if changing name
+    if (socket.data?.username && socket.data.username !== trimmed) {
+      const prev = usernameToSocket.get(socket.data.username);
+      if (prev === socket.id) usernameToSocket.delete(socket.data.username);
+    }
+    socket.data.username = trimmed;
+    usernameToSocket.set(trimmed, socket.id);
+    // Debug snapshot
+    const reserved = Array.from(usernameToSocket.entries());
+    const rooms = Array.from(gameRooms.entries()).map(([c, r]) => ({ code: c, p1: r.player1?.name, p2: r.player2?.name }));
+    console.log(`[auth] Reserved '${trimmed}' for ${socket.id}. ReservedNow=${JSON.stringify(reserved)} Rooms=${JSON.stringify(rooms)}`);
+    socket.emit('usernameReserveResult', { ok: true, reservedCount: reserved.length });
+  });
+
   // Handle game creation
-  socket.on("createGame", (playerName) => {
+  socket.on("createGame", (payload) => {
+    let playerName = typeof payload === 'string' ? payload : payload?.playerName;
+    const visibility = typeof payload === 'object' && payload?.visibility ? String(payload.visibility) : 'public';
     const roomCode = generateRoomCode();
     gameRooms.set(roomCode, {
       id: roomCode,
+      settings: { visibility, approvalRequired: true },
       player1: {
         id: socket.id,
         name: playerName,
@@ -602,6 +648,16 @@ io.on("connection", (socket) => {
       socket.emit("error", "Game room is full");
       return;
     }
+    const requiresApproval = room.settings?.approvalRequired;
+    if (requiresApproval) {
+      // Mark pending and ask host
+      const requestId = `${roomCode}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      room.pendingJoin = { requestId, playerName, joinerSocketId: socket.id };
+      socket.emit('joinPending', { roomCode });
+      if (room.player1?.id) io.to(room.player1.id).emit('joinRequest', { roomCode, playerName, requestId });
+      console.log(`Join request from ${playerName} for ${roomCode}, awaiting host approval.`);
+      return;
+    }
 
     socket.join(roomCode);
     room.player2 = {
@@ -624,6 +680,62 @@ io.on("connection", (socket) => {
     if (room.player1?.id)
       io.to(room.player1.id).emit("playerJoined", { player2Name: playerName });
     console.log(`Player ${playerName} joined room: ${roomCode}`);
+  });
+
+  // Host resolves join request
+  socket.on('resolveJoinRequest', ({ requestId, allow }) => {
+    // Find room with this pending request and host id
+    for (const [roomCode, room] of gameRooms.entries()) {
+      if (room.player1?.id === socket.id && room.pendingJoin?.requestId === requestId) {
+        const pending = room.pendingJoin;
+        delete room.pendingJoin;
+        const joinerId = pending.joinerSocketId;
+        const joinerSocket = io.sockets.sockets.get(joinerId);
+        if (!allow) {
+          if (joinerSocket) joinerSocket.emit('joinDenied', { roomCode });
+          console.log(`Host denied join for ${pending.playerName} in ${roomCode}`);
+          return;
+        }
+        if (room.player2) {
+          if (joinerSocket) joinerSocket.emit('error', 'Game room is full');
+          return;
+        }
+        // Approve and attach player2
+        room.player2 = {
+          id: joinerId,
+          name: pending.playerName,
+          ready: false,
+          cards: [],
+          cardsReady: false,
+          activePawns: [],
+          allPawns: [],
+        };
+        room.gameState.currentPhase = 'PRE_GAME';
+        if (joinerSocket) joinerSocket.join(roomCode);
+        if (joinerSocket) joinerSocket.emit('gameJoined', {
+          roomCode,
+          playerNumber: 2,
+          player1Name: room.player1?.name || 'Player 1',
+          playerName: pending.playerName,
+        });
+        if (room.player1?.id) io.to(room.player1.id).emit('playerJoined', { player2Name: pending.playerName });
+        console.log(`Host approved join for ${pending.playerName} in ${roomCode}`);
+        return;
+      }
+    }
+  });
+
+  // List public games
+  socket.on('listPublicGames', () => {
+    const games = [];
+    for (const [code, room] of gameRooms.entries()) {
+      const visible = (room.settings?.visibility || 'public') === 'public';
+      const slotAvailable = !room.player2;
+      if (visible && slotAvailable) {
+        games.push({ roomCode: code, hostName: room.player1?.name || 'Host', players: room.player2 ? 2 : 1 });
+      }
+    }
+    socket.emit('publicGames', games);
   });
 
   // Handle player readiness
@@ -1493,6 +1605,12 @@ io.on("connection", (socket) => {
   // Handle client disconnection
   socket.on("disconnect", () => {
     console.log(`Client disconnected: ${socket.id}`);
+    // release reserved username
+    if (socket.data?.username) {
+      const current = usernameToSocket.get(socket.data.username);
+      if (current === socket.id) usernameToSocket.delete(socket.data.username);
+      console.log(`[auth] Released username '${socket.data.username}' from ${socket.id}`);
+    }
 
     let roomCodeToRemove = null;
     let disconnectedPlayerNum = null;
