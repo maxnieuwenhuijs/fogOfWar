@@ -885,7 +885,7 @@ input[type="number"] {
 	padding-right: 8px;
 	box-sizing: border-box;
 	scrollbar-width: thin;
-	pointer-events: auto; /* Ensure interactivity on desktop */
+	pointer-events: auto !important; /* Force interactivity on desktop */
 }
 
 /* Custom scrollbar styling for card area */

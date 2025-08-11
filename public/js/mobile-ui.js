@@ -81,6 +81,13 @@
 
             const syncPointerState = () => {
                 if (!drawer) return;
+                // Only apply pointer-events changes on mobile
+                const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+                if (!isMobile) {
+                    drawer.style.pointerEvents = 'auto';
+                    if (proxyTab) proxyTab.style.display = 'none';
+                    return;
+                }
                 if (drawer.classList.contains('open')) {
                     drawer.style.pointerEvents = 'auto';
                     // hide proxy when open
@@ -134,7 +141,8 @@
             const updateButtonsPos = () => {
                 if (!statsBar || !btnChat || !btnSettings) return;
                 const rect = statsBar.getBoundingClientRect();
-                const top = Math.max(0, rect.top + rect.height + 36);
+                // Reduced offset from 36 to 8 pixels for better positioning
+                const top = Math.max(35, rect.top + rect.height + 8);
                 btnChat.style.top = `${top}px`;
                 btnSettings.style.top = `${top}px`;
                 btnChat.style.zIndex = '1000';
