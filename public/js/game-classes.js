@@ -124,35 +124,35 @@ class Pawn {
 
     // HP Bar (Left side - switched position)
     for (let i = 0; i < TOTAL_HP_BARS; i++) {
-        const bar = new PIXI.Graphics();
-        bar.position.set(0, i * (BAR_HEIGHT + BAR_SPACING));
-        this.hpBarContainer.addChild(bar);
-        this.hpBars.push(bar);
+      const bar = new PIXI.Graphics();
+      bar.position.set(0, i * (BAR_HEIGHT + BAR_SPACING));
+      this.hpBarContainer.addChild(bar);
+      this.hpBars.push(bar);
     }
     this.hpBarContainer.x = -radius - BAR_WIDTH + 1; // Left side
     this.hpBarContainer.y = -((TOTAL_HP_BARS * (BAR_HEIGHT + BAR_SPACING)) - BAR_SPACING) / 2;
 
     // Stamina Bar (Right side - switched position)
     for (let i = 0; i < TOTAL_STAMINA_BARS; i++) {
-        const bar = new PIXI.Graphics();
-        bar.position.set(0, i * (BAR_HEIGHT + BAR_SPACING));
-        this.staminaBarContainer.addChild(bar);
-        this.staminaBars.push(bar);
+      const bar = new PIXI.Graphics();
+      bar.position.set(0, i * (BAR_HEIGHT + BAR_SPACING));
+      this.staminaBarContainer.addChild(bar);
+      this.staminaBars.push(bar);
     }
     this.staminaBarContainer.x = radius - 1; // Right side
     this.staminaBarContainer.y = -((TOTAL_STAMINA_BARS * (BAR_HEIGHT + BAR_SPACING)) - BAR_SPACING) / 2;
-    
+
     this.staminaBarContainer.visible = false;
     this.hpBarContainer.visible = false;
 
     // --- Create Attack Stats Display (Center Bottom) ---
     this.attackStatsText = new PIXI.Text("", {
-        fontFamily: "Arial",
-        fontSize: 11,
-        fill: 0xFFFFFF, // White
-        stroke: 0x000000, // Black outline
-        strokeThickness: 2,
-        align: "center"
+      fontFamily: "Arial",
+      fontSize: 11,
+      fill: 0xFFFFFF, // White
+      stroke: 0x000000, // Black outline
+      strokeThickness: 2,
+      align: "center"
     });
     this.attackStatsText.anchor.set(0.5, 0); // Center horizontally, top vertically
     this.attackStatsText.position.set(0, radius - 2); // Center bottom of pawn
@@ -170,27 +170,27 @@ class Pawn {
     this.pixiObject.on("pointerdown", (event) => {
       if (gameState.isAnimating || gameState.currentPhase === "GAME_OVER") return;
       event.stopPropagation();
-      
+
       // Handle physics attack dragging when clicking on ENEMY pawn
-      if (gameState.currentPhase === "AWAITING_ACTION_TARGET" && 
-          gameState.selectedPawn && 
-          gameState.selectedPawn.player === gameState.playerNumber &&
-          this.player !== gameState.playerNumber && // This is an enemy pawn
-          typeof physicsAttackSystem !== 'undefined' &&
-          physicsAttackSystem) {
-        
+      if (gameState.currentPhase === "AWAITING_ACTION_TARGET" &&
+        gameState.selectedPawn &&
+        gameState.selectedPawn.player === gameState.playerNumber &&
+        this.player !== gameState.playerNumber && // This is an enemy pawn
+        typeof physicsAttackSystem !== 'undefined' &&
+        physicsAttackSystem) {
+
         // Check if this enemy is a valid target for the selected pawn
         const selectedPawn = gameState.selectedPawn;
         const targets = getAttackTargets(selectedPawn);
         const isValidTarget = targets.some(t => t.id === this.id);
-        
+
         if (isValidTarget) {
           console.log("Physics attack: Starting drag from enemy pawn:", this.id);
           console.log("Selected pawn:", selectedPawn.id);
-          
+
           const globalPos = event.global;
           const stagePos = globalToStageCoords(globalPos.x, globalPos.y);
-          
+
           // Test: Create a simple red circle at click position to verify graphics work
           const testGraphics = new PIXI.Graphics();
           testGraphics.beginFill(0xFF0000, 1);
@@ -204,23 +204,23 @@ class Pawn {
               testGraphics.destroy();
             }
           }, 2000);
-          
+
           // Start drag from enemy position, attacking pawn is the selected one
           physicsAttackSystem.startDrag(stagePos.x, stagePos.y, selectedPawn, this);
-          
+
           // Set dragging flag on the stage
           if (app && app.stage) {
             app.stage.isDraggingAttack = true;
             app.stage.dragStartPawn = selectedPawn;
             app.stage.dragTargetPawn = this;
           }
-          
+
           // Prevent normal click handling
           event.stopPropagation();
           return;
         }
       }
-      
+
       // Normal pawn click handling
       if (typeof onPawnClick === "function") onPawnClick(this);
     });
@@ -272,7 +272,7 @@ class Pawn {
       this.attackText.text = `⚔️ ${card.attack}`;
       // Hide stats text
       this.hpText.visible = false;
-    if (this.staminaText) this.staminaText.visible = false;
+      if (this.staminaText) this.staminaText.visible = false;
       this.attackText.visible = false;
     }
 
@@ -412,25 +412,25 @@ class Pawn {
   }
 
   updateBars() {
-    try { console.log("[Pawn.updateBars]", { id: this.id, active: this.isActive, hasCard: !!this.linkedCard, rs: this.remainingStamina, hp: this.currentHP }); } catch(_) {}
+    try { console.log("[Pawn.updateBars]", { id: this.id, active: this.isActive, hasCard: !!this.linkedCard, rs: this.remainingStamina, hp: this.currentHP }); } catch (_) { }
     // If visual is already destroyed or missing, skip
     if (!this.pixiObject || this.pixiObject.destroyed) {
       return;
     }
     if (!this.isActive || !this.linkedCard) {
-        this.staminaBarContainer.visible = false;
-        this.hpBarContainer.visible = false;
-        if (this.attackStatsText) this.attackStatsText.visible = false;
-        return;
+      this.staminaBarContainer.visible = false;
+      this.hpBarContainer.visible = false;
+      if (this.attackStatsText) this.attackStatsText.visible = false;
+      return;
     }
 
     this.staminaBarContainer.visible = true;
     this.hpBarContainer.visible = true;
-    
+
     // Show attack stats in center bottom
     if (this.attackStatsText && this.linkedCard) {
-        this.attackStatsText.text = this.linkedCard.attack || "0";
-        this.attackStatsText.visible = true;
+      this.attackStatsText.text = this.linkedCard.attack || "0";
+      this.attackStatsText.visible = true;
     }
 
     const BAR_WIDTH = 4;
@@ -443,44 +443,44 @@ class Pawn {
     // Update HP Bar
     const maxHP = this.linkedCard.hp || 5;
     for (let i = 0; i < this.hpBars.length; i++) {
-        const bar = this.hpBars[i];
-        if (!bar || bar.destroyed) continue;
-        bar.clear();
-        const color = (this.hpBars.length - i) <= this.currentHP ? HP_COLOR : DEPLETED_COLOR;
-        bar.beginFill(color);
-        bar.drawRect(0, 0, BAR_WIDTH, BAR_HEIGHT);
-        bar.endFill();
+      const bar = this.hpBars[i];
+      if (!bar || bar.destroyed) continue;
+      bar.clear();
+      const color = (this.hpBars.length - i) <= this.currentHP ? HP_COLOR : DEPLETED_COLOR;
+      bar.beginFill(color);
+      bar.drawRect(0, 0, BAR_WIDTH, BAR_HEIGHT);
+      bar.endFill();
     }
 
     // Update Stamina Bar with gradient colors
     for (let i = 0; i < this.staminaBars.length; i++) {
-        const bar = this.staminaBars[i];
-        if (!bar || bar.destroyed) continue;
-        bar.clear();
-        let color = DEPLETED_COLOR;
-        
-        if ((this.staminaBars.length - i) <= this.remainingStamina) {
-            // Calculate gradient based on remaining stamina
-            // 1 stamina = red, 5 stamina = green, with colors in between
-            const staminaLevel = this.remainingStamina;
-            if (staminaLevel === 1) {
-                color = 0xFF0000; // Red
-            } else if (staminaLevel === 2) {
-                color = 0xFF8000; // Orange
-            } else if (staminaLevel === 3) {
-                color = 0xFFFF00; // Yellow
-            } else if (staminaLevel === 4) {
-                color = 0x80FF00; // Yellow-Green
-            } else if (staminaLevel === 5) {
-                color = 0x00FF00; // Green
-            } else {
-                color = 0x00FF00; // Default to green for higher values
-            }
+      const bar = this.staminaBars[i];
+      if (!bar || bar.destroyed) continue;
+      bar.clear();
+      let color = DEPLETED_COLOR;
+
+      if ((this.staminaBars.length - i) <= this.remainingStamina) {
+        // Calculate gradient based on remaining stamina
+        // 1 stamina = red, 5 stamina = green, with colors in between
+        const staminaLevel = this.remainingStamina;
+        if (staminaLevel === 1) {
+          color = 0xFF0000; // Red
+        } else if (staminaLevel === 2) {
+          color = 0xFF8000; // Orange
+        } else if (staminaLevel === 3) {
+          color = 0xFFFF00; // Yellow
+        } else if (staminaLevel === 4) {
+          color = 0x80FF00; // Yellow-Green
+        } else if (staminaLevel === 5) {
+          color = 0x00FF00; // Green
+        } else {
+          color = 0x00FF00; // Default to green for higher values
         }
-        
-        bar.beginFill(color);
-        bar.drawRect(0, 0, BAR_WIDTH, BAR_HEIGHT);
-        bar.endFill();
+      }
+
+      bar.beginFill(color);
+      bar.drawRect(0, 0, BAR_WIDTH, BAR_HEIGHT);
+      bar.endFill();
     }
   }
 
@@ -501,41 +501,37 @@ class Pawn {
     // Ensure tooltip is a direct child of body for reliable fixed positioning
     if (tooltipElement.parentElement !== document.body) {
       document.body.appendChild(tooltipElement);
-      console.log("Tooltip appended to body."); // Log if moved
     }
 
     // 2. Make it measurable but hidden
     tooltipElement.style.visibility = 'hidden';
     tooltipElement.style.display = 'block';
 
-    // 3. Get dimensions NOW
+    // 3. Compute transformed pawn center in viewport coordinates
+    const canvasRect = app.view.getBoundingClientRect();
+    const scale = app.stage?.scale?.x || 1;
+    const stageX = app.stage?.x || 0;
+    const stageY = app.stage?.y || 0;
+    const pawnCenterX_Viewport = canvasRect.left + stageX + this.pixiObject.x * scale;
+    const pawnCenterY_Viewport = canvasRect.top + stageY + this.pixiObject.y * scale;
+
+    // 4. Measure tooltip
     const tooltipRect = tooltipElement.getBoundingClientRect();
 
-    // Position tooltip above the pawn sprite
-    const canvasRect = app.view.getBoundingClientRect(); // Get canvas position in viewport
-    const pawnLocalX = this.pixiObject.x; // Pawn X relative to Pixi stage origin
-    const pawnLocalY = this.pixiObject.y; // Pawn Y relative to Pixi stage origin
+    // 5. Place above pawn with small offset; clamp to viewport
+    const radiusPx = (CELL_SIZE * 0.4) * scale;
+    const pointerHeight = 6;
+    const verticalBuffer = 6;
+    let tx = pawnCenterX_Viewport - tooltipRect.width / 2;
+    let ty = pawnCenterY_Viewport - radiusPx - pointerHeight - verticalBuffer - tooltipRect.height;
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+    tx = Math.max(8, Math.min(vw - tooltipRect.width - 8, tx));
+    ty = Math.max(8, Math.min(vh - tooltipRect.height - 8, ty));
 
-    // 4. Calculate position (using viewport coordinates for position:fixed)
-    const pawnCenterX_Viewport = canvasRect.left + pawnLocalX; // Pawn center X relative to viewport
-    const pawnCenterY_Viewport = canvasRect.top + pawnLocalY; // Pawn center Y relative to viewport
-
-    // Calculate tooltip's top-left corner in viewport coordinates
-    const tooltipX = pawnCenterX_Viewport - (tooltipRect.width / 2); // Center horizontally
-    const pointerHeight = 5; // Height of the ::after pseudo-element triangle
-    const verticalBuffer = 5; // Small buffer above the pawn's visual top edge
-    const radius = CELL_SIZE * 0.4; // Approximate radius used in createVisual
-    const pawnTopEdge_Viewport = pawnCenterY_Viewport - radius; // Estimate pawn's visual top edge Y
-    // Position tooltip's top edge above the pawn's estimated top edge
-    const tooltipY = pawnTopEdge_Viewport - tooltipRect.height - pointerHeight - verticalBuffer;
-
-    // 5. Set position using fixed positioning (relative to viewport)
-    tooltipElement.style.left = `${Math.round(tooltipX)}px`;
-    tooltipElement.style.top = `${Math.round(tooltipY)}px`;
-
-    // 6. Make visible
+    tooltipElement.style.left = `${Math.round(tx)}px`;
+    tooltipElement.style.top = `${Math.round(ty)}px`;
     tooltipElement.style.visibility = 'visible';
-    // display: 'block' is already set
   }
 
   hideTooltip() {

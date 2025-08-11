@@ -67,7 +67,7 @@
         <button id="join-game-btn" class="primary-btn">Join Game</button>
       </div>
     </div>
-    
+
   </div>
 
   <div id="waiting-screen" class="screen">
@@ -197,217 +197,217 @@
 
       <!-- Right Column: Cards -->
       <div id="card-ui-area" class="ui-panel">
-          <div id="opponent-waiting" style="display: none">
-            <h3><span class="panel-icon">⏳</span> Awaiting Opponent's Strategy</h3>
-            <p>Hold position...</p>
-            <div class="spinner small-spinner"></div>
-          </div>
-          <div id="card-definition-ui" style="display: none">
-            <h3>
-              <span class="panel-icon">✨</span> Devise Tactics - Round <span id="def-round-num">1</span> (P
-              <span id="def-player-num">1</span>)
-            </h3>
-            <div id="card-presets">
-              <h4>Standard Formations:</h4>
-              <div class="preset-buttons-container">
-                <button id="preset-speedy" class="preset-button">
-                  Swift Scouts (1/5/1)
-                </button>
-                <button id="preset-attackers" class="preset-button">
-                  Shock Troops (3/1/3)
-                </button>
-                <button id="preset-defenders" class="preset-button">
-                  Iron Guard (4/1/2)
-                </button>
-              </div>
-            </div>
-            <p>Assign 7 points total (min 1 each) per unit.</p>
-            <div class="card-input-grid">
-              <div class="card-inputs">
-                <h4>Unit 1</h4>
-                <label>🛡️ Resilience (HP):
-                  <input type="number" id="card1-hp" min="1" max="5" value="3" /></label>
-                <label>🐎 March (Stamina):
-                  <input type="number" id="card1-stamina" min="1" max="5" value="2" /></label>
-                <label>⚔️ Might (Attack):
-                  <input type="number" id="card1-attack" min="1" max="5" value="2" /></label>
-                <span class="card-sum" id="card1-sum">Total: 7</span>
-              </div>
-              <div class="card-inputs">
-                <h4>Unit 2</h4>
-                <label>🛡️ Resilience (HP):
-                  <input type="number" id="card2-hp" min="1" max="5" value="2" /></label>
-                <label>🐎 March (Stamina):
-                  <input type="number" id="card2-stamina" min="1" max="5" value="3" /></label>
-                <label>⚔️ Might (Attack):
-                  <input type="number" id="card2-attack" min="1" max="5" value="2" /></label>
-                <span class="card-sum" id="card2-sum">Total: 7</span>
-              </div>
-              <div class="card-inputs">
-                <h4>Unit 3</h4>
-                <label>🛡️ Resilience (HP):
-                  <input type="number" id="card3-hp" min="1" max="5" value="1" /></label>
-                <label>🐎 March (Stamina):
-                  <input type="number" id="card3-stamina" min="1" max="5" value="1" /></label>
-                <label>⚔️ Might (Attack):
-                  <input type="number" id="card3-attack" min="1" max="5" value="5" /></label>
-                <span class="card-sum" id="card3-sum">Total: 7</span>
-              </div>
-            </div>
-            <button id="confirm-cards-btn" class="action-button confirm-button"><span class="btn-icon">✔️</span>
-              Finalize Orders</button>
-          </div>
-          <div id="card-reveal-ui" style="display: none">
-            <h3><span class="panel-icon">👁️</span> Orders Revealed - Round <span id="reveal-round-num">1</span></h3>
-            <div class="players-cards">
-              <div class="player-cards-section">
-                <h4>Your Orders:</h4>
-                <div id="your-revealed-cards" class="revealed-cards">
-                  <!-- Static Card Examples (will be replaced by JS) -->
-                  <div class="card-item player-1">
-                    <strong class="card-title">Unit 1</strong>
-                    <div class="card-stats">
-                      <span><span class="icon hp-icon">🛡️</span> <span class="value">3</span></span>
-                      <span><span class="icon speed-icon">🐎</span> <span class="value">2</span></span>
-                      <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
-                    </div>
-                  </div>
-                  <div class="card-item player-1">
-                    <strong class="card-title">Unit 2</strong>
-                    <div class="card-stats">
-                      <span><span class="icon hp-icon">🛡️</span> <span class="value">2</span></span>
-                      <span><span class="icon speed-icon">🐎</span> <span class="value">3</span></span>
-                      <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
-                    </div>
-                  </div>
-                  <!-- End Static Examples -->
-                </div>
-              </div>
-              <div class="player-cards-section">
-                <h4>Opponent's Orders:</h4>
-                <div id="opponent-revealed-cards" class="revealed-cards">
-                  <!-- Static Card Examples (will be replaced by JS) -->
-                  <div class="card-item player-2">
-                    <strong class="card-title">Unit 1</strong>
-                    <div class="card-stats">
-                      <span><span class="icon hp-icon">🛡️</span> <span class="value">4</span></span>
-                      <span><span class="icon speed-icon">🐎</span> <span class="value">1</span></span>
-                      <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
-                    </div>
-                  </div>
-                  <div class="card-item player-2">
-                    <strong class="card-title">Unit 2</strong>
-                    <div class="card-stats">
-                      <span><span class="icon hp-icon">🛡️</span> <span class="value">1</span></span>
-                      <span><span class="icon speed-icon">🐎</span> <span class="value">5</span></span>
-                      <span><span class="icon attack-icon">⚔️</span> <span class="value">1</span></span>
-                    </div>
-                  </div>
-                  <!-- End Static Examples -->
-                </div>
-              </div>
-            </div>
-            <div id="initiative-result">
-              <h4><span class="panel-icon">⭐</span> Initiative:</h4>
-              <p>
-                Player <span id="initiative-player">1</span> holds the initiative!
-              </p>
-              <p id="initiative-reason">(Superior Firepower: 9 vs 7)</p>
+        <div id="opponent-waiting" style="display: none">
+          <h3><span class="panel-icon">⏳</span> Awaiting Opponent's Strategy</h3>
+          <p>Hold position...</p>
+          <div class="spinner small-spinner"></div>
+        </div>
+        <div id="card-definition-ui" style="display: none">
+          <h3>
+            <span class="panel-icon">✨</span> Devise Tactics - Round <span id="def-round-num">1</span> (P
+            <span id="def-player-num">1</span>)
+          </h3>
+          <div id="card-presets">
+            <h4>Standard Formations:</h4>
+            <div class="preset-buttons-container">
+              <button id="preset-speedy" class="preset-button">
+                Swift Scouts (1/5/1)
+              </button>
+              <button id="preset-attackers" class="preset-button">
+                Shock Troops (3/1/3)
+              </button>
+              <button id="preset-defenders" class="preset-button">
+                Iron Guard (4/1/2)
+              </button>
             </div>
           </div>
-          <div id="linking-ui" style="display: none">
-            <h3>
-              <span class="panel-icon">🔗</span> Assign Units - Round <span id="link-round-num">1</span>, P
-              <span id="link-player-num">1</span>
-            </h3>
-            <div id="available-cards-linking">
-              <h4><span class="panel-icon">🃏</span> Available Units:</h4>
-              <div class="card-list-container">
+          <p>Assign 7 points total (min 1 each) per unit.</p>
+          <div class="card-input-grid">
+            <div class="card-inputs">
+              <h4>Unit 1</h4>
+              <label>🛡️ Resilience (HP):
+                <input type="number" id="card1-hp" min="1" max="5" value="3" /></label>
+              <label>🐎 March (Stamina):
+                <input type="number" id="card1-stamina" min="1" max="5" value="2" /></label>
+              <label>⚔️ Might (Attack):
+                <input type="number" id="card1-attack" min="1" max="5" value="2" /></label>
+              <span class="card-sum" id="card1-sum">Total: 7</span>
+            </div>
+            <div class="card-inputs">
+              <h4>Unit 2</h4>
+              <label>🛡️ Resilience (HP):
+                <input type="number" id="card2-hp" min="1" max="5" value="2" /></label>
+              <label>🐎 March (Stamina):
+                <input type="number" id="card2-stamina" min="1" max="5" value="3" /></label>
+              <label>⚔️ Might (Attack):
+                <input type="number" id="card2-attack" min="1" max="5" value="2" /></label>
+              <span class="card-sum" id="card2-sum">Total: 7</span>
+            </div>
+            <div class="card-inputs">
+              <h4>Unit 3</h4>
+              <label>🛡️ Resilience (HP):
+                <input type="number" id="card3-hp" min="1" max="5" value="1" /></label>
+              <label>🐎 March (Stamina):
+                <input type="number" id="card3-stamina" min="1" max="5" value="1" /></label>
+              <label>⚔️ Might (Attack):
+                <input type="number" id="card3-attack" min="1" max="5" value="5" /></label>
+              <span class="card-sum" id="card3-sum">Total: 7</span>
+            </div>
+          </div>
+          <button id="confirm-cards-btn" class="action-button confirm-button"><span class="btn-icon">✔️</span>
+            Finalize Orders</button>
+        </div>
+        <div id="card-reveal-ui" style="display: none">
+          <h3><span class="panel-icon">👁️</span> Orders Revealed - Round <span id="reveal-round-num">1</span></h3>
+          <div class="players-cards">
+            <div class="player-cards-section">
+              <h4>Your Orders:</h4>
+              <div id="your-revealed-cards" class="revealed-cards">
                 <!-- Static Card Examples (will be replaced by JS) -->
-                <div class="card-item player-2 linked">
-                  <strong class="card-title">Opp Unit 1</strong>
+                <div class="card-item player-1">
+                  <strong class="card-title">Unit 1</strong>
                   <div class="card-stats">
-                    <span><span class="icon hp-icon">🛡️</span> <span class="value">4</span></span>
-                    <span><span class="icon speed-icon">🐎</span> <span class="value">1</span></span>
+                    <span><span class="icon hp-icon">🛡️</span> <span class="value">3</span></span>
+                    <span><span class="icon speed-icon">🐎</span> <span class="value">2</span></span>
                     <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
                   </div>
-                  <div class="linked-overlay">ASSIGNED</div>
                 </div>
-                <div class="card-item player-1 card-selected">
-                  <strong class="card-title">Your Unit 2</strong>
+                <div class="card-item player-1">
+                  <strong class="card-title">Unit 2</strong>
                   <div class="card-stats">
                     <span><span class="icon hp-icon">🛡️</span> <span class="value">2</span></span>
                     <span><span class="icon speed-icon">🐎</span> <span class="value">3</span></span>
                     <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
                   </div>
                 </div>
-                <div class="card-item player-1">
-                  <strong class="card-title">Your Unit 3</strong>
+                <!-- End Static Examples -->
+              </div>
+            </div>
+            <div class="player-cards-section">
+              <h4>Opponent's Orders:</h4>
+              <div id="opponent-revealed-cards" class="revealed-cards">
+                <!-- Static Card Examples (will be replaced by JS) -->
+                <div class="card-item player-2">
+                  <strong class="card-title">Unit 1</strong>
+                  <div class="card-stats">
+                    <span><span class="icon hp-icon">🛡️</span> <span class="value">4</span></span>
+                    <span><span class="icon speed-icon">🐎</span> <span class="value">1</span></span>
+                    <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
+                  </div>
+                </div>
+                <div class="card-item player-2">
+                  <strong class="card-title">Unit 2</strong>
                   <div class="card-stats">
                     <span><span class="icon hp-icon">🛡️</span> <span class="value">1</span></span>
-                    <span><span class="icon speed-icon">🐎</span> <span class="value">1</span></span>
-                    <span><span class="icon attack-icon">⚔️</span> <span class="value">5</span></span>
+                    <span><span class="icon speed-icon">🐎</span> <span class="value">5</span></span>
+                    <span><span class="icon attack-icon">⚔️</span> <span class="value">1</span></span>
                   </div>
                 </div>
                 <!-- End Static Examples -->
               </div>
             </div>
-            <div id="linking-status">Select an unassigned unit, then select a regiment on the map.</div>
           </div>
-
-          <!-- Timer Display -->
-          <div id="phase-timer" class="ui-timer" style="display: none;">
-            ⏳ Time left: <span id="phase-timer-count">20</span>s
+          <div id="initiative-result">
+            <h4><span class="panel-icon">⭐</span> Initiative:</h4>
+            <p>
+              Player <span id="initiative-player">1</span> holds the initiative!
+            </p>
+            <p id="initiative-reason">(Superior Firepower: 9 vs 7)</p>
           </div>
-
-          <!-- RPS Tiebreaker UI -->
-          <div id="rps-tiebreaker-ui" style="display: none;">
-            <h3><span class="panel-icon">⚔️</span> Initiative Duel! <span class="panel-icon">⚔️</span></h3>
-            <p>Equal tactics measured! Settle the initiative with swift action!</p>
-            <p id="rps-instruction" style="font-weight: bold;">Choose your Maneuver!</p>
-            <div id="rps-buttons">
-              <button id="rps-rock" class="rps-choice-btn action-button" data-choice="rock"
-                title="Steadfast Defense (Rock)">🪨</button>
-              <button id="rps-paper" class="rps-choice-btn action-button" data-choice="paper"
-                title="Enveloping Formation (Paper)">📜</button>
-              <button id="rps-scissors" class="rps-choice-btn action-button" data-choice="scissors"
-                title="Flanking Attack (Scissors)">✂️</button>
+        </div>
+        <div id="linking-ui" style="display: none">
+          <h3>
+            <span class="panel-icon">🔗</span> Assign Units - Round <span id="link-round-num">1</span>, P
+            <span id="link-player-num">1</span>
+          </h3>
+          <div id="available-cards-linking">
+            <h4><span class="panel-icon">🃏</span> Available Units:</h4>
+            <div class="card-list-container">
+              <!-- Static Card Examples (will be replaced by JS) -->
+              <div class="card-item player-2 linked">
+                <strong class="card-title">Opp Unit 1</strong>
+                <div class="card-stats">
+                  <span><span class="icon hp-icon">🛡️</span> <span class="value">4</span></span>
+                  <span><span class="icon speed-icon">🐎</span> <span class="value">1</span></span>
+                  <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
+                </div>
+                <div class="linked-overlay">ASSIGNED</div>
+              </div>
+              <div class="card-item player-1 card-selected">
+                <strong class="card-title">Your Unit 2</strong>
+                <div class="card-stats">
+                  <span><span class="icon hp-icon">🛡️</span> <span class="value">2</span></span>
+                  <span><span class="icon speed-icon">🐎</span> <span class="value">3</span></span>
+                  <span><span class="icon attack-icon">⚔️</span> <span class="value">2</span></span>
+                </div>
+              </div>
+              <div class="card-item player-1">
+                <strong class="card-title">Your Unit 3</strong>
+                <div class="card-stats">
+                  <span><span class="icon hp-icon">🛡️</span> <span class="value">1</span></span>
+                  <span><span class="icon speed-icon">🐎</span> <span class="value">1</span></span>
+                  <span><span class="icon attack-icon">⚔️</span> <span class="value">5</span></span>
+                </div>
+              </div>
+              <!-- End Static Examples -->
             </div>
-            <div id="rps-result">
-              <!-- Results will be filled here -->
+          </div>
+          <div id="linking-status">Select an unassigned unit, then select a regiment on the map.</div>
+        </div>
+
+        <!-- Timer Display -->
+        <div id="phase-timer" class="ui-timer" style="display: none;">
+          ⏳ Time left: <span id="phase-timer-count">20</span>s
+        </div>
+
+        <!-- RPS Tiebreaker UI -->
+        <div id="rps-tiebreaker-ui" style="display: none;">
+          <h3><span class="panel-icon">⚔️</span> Initiative Duel! <span class="panel-icon">⚔️</span></h3>
+          <p>Equal tactics measured! Settle the initiative with swift action!</p>
+          <p id="rps-instruction" style="font-weight: bold;">Choose your Maneuver!</p>
+          <div id="rps-buttons">
+            <button id="rps-rock" class="rps-choice-btn action-button" data-choice="rock"
+              title="Steadfast Defense (Rock)">🪨</button>
+            <button id="rps-paper" class="rps-choice-btn action-button" data-choice="paper"
+              title="Enveloping Formation (Paper)">📜</button>
+            <button id="rps-scissors" class="rps-choice-btn action-button" data-choice="scissors"
+              title="Flanking Attack (Scissors)">✂️</button>
+          </div>
+          <div id="rps-result">
+            <!-- Results will be filled here -->
+          </div>
+        </div>
+
+        <!-- Action UI -->
+        <div id="action-ui" style="display: none">
+          <h3><span class="panel-icon">⚔️</span> Action Phase (P <span id="action-player-num">1</span>)</h3>
+          <div id="selected-pawn-info">Select a regiment to command.</div>
+        </div>
+
+        <!-- Epic Victory Screen -->
+        <div id="game-over" style="display: none;">
+          <div class="victory-container">
+            <div class="victory-crown">👑</div>
+            <h2 class="victory-title">GLORIOUS VICTORY!</h2>
+            <div class="victory-message">
+              General <span id="winner-name">1</span> has conquered the battlefield!
             </div>
-          </div>
-
-          <!-- Action UI -->
-          <div id="action-ui" style="display: none">
-            <h3><span class="panel-icon">⚔️</span> Action Phase (P <span id="action-player-num">1</span>)</h3>
-            <div id="selected-pawn-info">Select a regiment to command.</div>
-          </div>
-
-          <!-- Epic Victory Screen -->
-          <div id="game-over" style="display: none;">
-            <div class="victory-container">
-              <div class="victory-crown">👑</div>
-              <h2 class="victory-title">GLORIOUS VICTORY!</h2>
-              <div class="victory-message">
-                General <span id="winner-name">1</span> has conquered the battlefield!
-              </div>
-              <div class="victory-banner">
-                <div class="victory-medal left"></div>
-                <div class="victory-text">TRIUMPH</div>
-                <div class="victory-medal right"></div>
-              </div>
-              <div class="victory-fireworks">
-                <div class="firework" id="firework1"></div>
-                <div class="firework" id="firework2"></div>
-                <div class="firework" id="firework3"></div>
-              </div>
+            <div class="victory-banner">
+              <div class="victory-medal left"></div>
+              <div class="victory-text">TRIUMPH</div>
+              <div class="victory-medal right"></div>
+            </div>
+            <div class="victory-fireworks">
+              <div class="firework" id="firework1"></div>
+              <div class="firework" id="firework2"></div>
+              <div class="firework" id="firework3"></div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-    </div> <!-- End of game-area -->
+  </div> <!-- End of game-area -->
   </div>
 
   <!-- Toast notification -->
@@ -416,7 +416,7 @@
   </div>
 
   <!-- Pawn Tooltip Element -->
-  <div id="pawn-tooltip" class="tooltip" style="display: none; position: absolute; z-index: 100;">
+  <div id="pawn-tooltip" class="tooltip" style="display: none; position: fixed; z-index: 100;">
     <!-- Content will be set by JS -->
   </div>
 
@@ -443,6 +443,11 @@
   <!-- Game scripts -->
   <script src="js/game-constants.js"></script>
   <script src="js/game-classes.js"></script>
+  <script src="js/sp-logger.js"></script>
+  <script>
+    // Default difficulty can be overridden later from menu
+    try { if (window.SpLogger) SpLogger.setDifficulty(localStorage.getItem('sp_difficulty') || 'easy'); } catch (_) { }
+  </script>
   <script src="js/physics-attack-v2.js"></script>
   <!-- Removed test/instructions panels in singleplayer build -->
   <script src="js/physics-attack-sync.js"></script>

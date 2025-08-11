@@ -14,16 +14,16 @@ const ICON_TEXTURES = {};
 
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('Main.js loaded - DOM fully parsed.');
-    
+
     // Show loading screen and load assets
     await loadingScreen.loadAssets();
-    
+
     // Hide all screens initially
     document.getElementById('lobby-screen').classList.remove('active');
     document.getElementById('waiting-screen').classList.remove('active');
     document.getElementById('game-lobby-screen').classList.remove('active');
     document.getElementById('game-screen').classList.remove('active');
-    
+
     // Hide loading screen and show main menu
     loadingScreen.hide();
     menuSystem.showMainMenu();
@@ -190,21 +190,21 @@ async function initGame() {
     const playerNumEl = document.getElementById('player-num');
     const playerIndicatorEl = document.getElementById('player-indicator');
 
-    if (gameRoomCodeEl && gameSession.roomCode) { 
-        gameRoomCodeEl.textContent = gameSession.roomCode; 
+    if (gameRoomCodeEl && gameSession.roomCode) {
+        gameRoomCodeEl.textContent = gameSession.roomCode;
     }
-    if (playerNumEl && gameSession.playerNumber) { 
-        playerNumEl.textContent = gameSession.playerNumber; 
+    if (playerNumEl && gameSession.playerNumber) {
+        playerNumEl.textContent = gameSession.playerNumber;
     }
-    if (playerIndicatorEl && gameState.playerNumber) { 
-        playerIndicatorEl.style.backgroundColor = gameState.playerNumber === PLAYER_1 ? '#ff0000' : '#0000ff'; 
+    if (playerIndicatorEl && gameState.playerNumber) {
+        playerIndicatorEl.style.backgroundColor = gameState.playerNumber === PLAYER_1 ? '#ff0000' : '#0000ff';
     }
 
     // Apply initial game state from the server, captured by the patch - Kan direct
     console.log('🔍 DEBUG: Checking initialization path...');
     console.log('🔍 gameSession.initialGameState exists?', !!gameSession.initialGameState);
     console.log('🔍 Full gameState:', gameState);
-    
+
     if (gameSession.initialGameState) {
         console.log('Applying initial game state:', gameSession.initialGameState);
         gameState.currentPhase = gameSession.initialGameState.currentPhase;
@@ -258,37 +258,41 @@ async function initGame() {
         if (!gameContainer) {
             throw new Error("Game container not found!");
         }
-        
+
         // Get computed dimensions from CSS
         const containerRect = gameContainer.getBoundingClientRect();
         let canvasWidth = Math.floor(containerRect.width) || BOARD_WIDTH;
         let canvasHeight = Math.floor(containerRect.height) || BOARD_HEIGHT;
-        
+
         // Ensure the canvas maintains square aspect ratio
         const minDimension = Math.min(canvasWidth, canvasHeight);
         canvasWidth = minDimension;
         canvasHeight = minDimension;
-        
+
         console.log(`Creating canvas with dimensions: ${canvasWidth} x ${canvasHeight}`);
 
         // Target color from CSS: #e7c07d (approx)
         const desiredBgColorHex = 0xe7c07d;
 
+        const devicePixelRatio = Math.max(1, window.devicePixelRatio || 1);
         app = new PIXI.Application({ // 'app' opnieuw toewijzen
             width: canvasWidth, // Use dynamic width based on container
             height: canvasHeight, // Use dynamic height based on container
             backgroundAlpha: 0, // Keep transparent for CSS background to show through
             antialias: true,
-            clearBeforeRender: true // Ensure canvas is cleared each frame
+            clearBeforeRender: true, // Ensure canvas is cleared each frame
+            resolution: devicePixelRatio, // Map logical to physical pixels for crisp rendering
+            autoDensity: true, // Adjust canvas size for resolution while keeping CSS size stable
+            resizeTo: gameContainer // Auto-resize renderer with container
         });
-        
+
         // Scale the entire stage to fit the canvas while maintaining grid proportions
         const scaleX = canvasWidth / BOARD_WIDTH;
         const scaleY = canvasHeight / BOARD_HEIGHT;
         const scale = Math.min(scaleX, scaleY);
-        
+
         app.stage.scale.set(scale, scale);
-        
+
         // Center the scaled content
         app.stage.x = (canvasWidth - BOARD_WIDTH * scale) / 2;
         app.stage.y = (canvasHeight - BOARD_HEIGHT * scale) / 2;
@@ -298,38 +302,77 @@ async function initGame() {
 
         console.log("Pixi Application created (alpha 0, clear color set, with responsive dimensions):", app);
 
-        // Add resize handler to maintain proper scaling
-        function resizeCanvas() {
-            if (!app || !gameContainer) return;
-            
-            const containerRect = gameContainer.getBoundingClientRect();
-            let newWidth = Math.floor(containerRect.width) || BOARD_WIDTH;
-            let newHeight = Math.floor(containerRect.height) || BOARD_HEIGHT;
-            
-            // Maintain square aspect ratio
-            const minDimension = Math.min(newWidth, newHeight);
-            newWidth = minDimension;
-            newHeight = minDimension;
-            
-            // Resize the renderer
-            app.renderer.resize(newWidth, newHeight);
-            
-            // Recalculate scale
-            const scaleX = newWidth / BOARD_WIDTH;
-            const scaleY = newHeight / BOARD_HEIGHT;
-            const scale = Math.min(scaleX, scaleY);
-            
-            app.stage.scale.set(scale, scale);
-            
-            // Recenter the scaled content
-            app.stage.x = (newWidth - BOARD_WIDTH * scale) / 2;
-            app.stage.y = (newHeight - BOARD_HEIGHT * scale) / 2;
+        // Helpers for logging and scaling on resize
+        function logCanvasMetrics(sourceLabel) {
+            try {
+                if (!window.SpLogger || !app) return;
+                const rect = gameContainer.getBoundingClientRect();
+                const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+                const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+                SpLogger.log("canvas.resize", {
+                    source: sourceLabel,
+                    dpr: window.devicePixelRatio || 1,
+                    window: { w: vw, h: vh, scrollX: window.scrollX || 0, scrollY: window.scrollY || 0 },
+                    screen: { w: app.screen?.width, h: app.screen?.height },
+                    renderer: {
+                        width: app.renderer?.width,
+                        height: app.renderer?.height,
+                        resolution: app.renderer?.resolution
+                    },
+                    containerRect: { w: Math.round(rect.width), h: Math.round(rect.height) },
+                    stageScale: { x: app.stage?.scale?.x, y: app.stage?.scale?.y },
+                    stagePos: { x: app.stage?.x, y: app.stage?.y }
+                });
+            } catch (_) { }
         }
-        
-        // Add event listener for window resize
+
+        function applyStageScaleForCurrentRenderer() {
+            if (!app) return;
+            const rect = gameContainer.getBoundingClientRect();
+            // Maintain square using container CSS pixels
+            let viewW = Math.floor(rect.width) || BOARD_WIDTH;
+            let viewH = Math.floor(rect.height) || BOARD_HEIGHT;
+            const minDim = Math.min(viewW, viewH);
+            viewW = minDim; viewH = minDim;
+            // Ensure renderer matches desired CSS pixels (in case resizeTo didn't fire yet)
+            if (app.screen.width !== viewW || app.screen.height !== viewH) {
+                app.renderer.resize(viewW, viewH);
+            }
+            // Explicitly sync the canvas CSS size for consistency across browsers/zoom
+            try {
+                app.view.style.width = `${viewW}px`;
+                app.view.style.height = `${viewH}px`;
+                app.view.style.display = 'block';
+            } catch (_) { }
+            const scaleX = app.screen.width / BOARD_WIDTH;
+            const scaleY = app.screen.height / BOARD_HEIGHT;
+            const scale = Math.min(scaleX, scaleY);
+            app.stage.scale.set(scale, scale);
+            app.stage.x = (app.screen.width - BOARD_WIDTH * scale) / 2;
+            app.stage.y = (app.screen.height - BOARD_HEIGHT * scale) / 2;
+            // Update hit area to match the new screen rectangle so pointer mapping is correct at all sizes
+            try {
+                app.stage.hitArea = app.screen; // PIXI.Rectangle updated by renderer.resize
+            } catch (_) { }
+        }
+
+        // Add resize handler to maintain proper scaling and log metrics
+        function resizeCanvas(source = "window.resize") {
+            if (!app || !gameContainer) return;
+            applyStageScaleForCurrentRenderer();
+            logCanvasMetrics(source);
+        }
+
+        // Add event listener for window resize and orientation changes
         window.addEventListener('resize', () => {
-            resizeCanvas();
+            resizeCanvas('window.resize');
             console.log('Canvas resized - coordinate conversion updated');
+            try { if (window.SpLogger) SpLogger.log('canvas.resize.ui', { reason: 'window.resize' }); } catch (_) { }
+        });
+        window.addEventListener('orientationchange', () => {
+            resizeCanvas('orientation.change');
+            console.log('Canvas resized due to orientation change');
+            try { if (window.SpLogger) SpLogger.log('canvas.resize.ui', { reason: 'orientation.change' }); } catch (_) { }
         });
 
         gameContainer.innerHTML = ''; // Leegmaken voor zekerheid
@@ -338,6 +381,25 @@ async function initGame() {
             throw new Error("Appended element is not a canvas!");
         }
         console.log("PixiJS canvas appended. Canvas:", canvasElement);
+        // Ensure canvas is on top and receives pointer events across layouts/zoom
+        try {
+            canvasElement.style.position = 'relative';
+            canvasElement.style.zIndex = '5';
+            canvasElement.style.pointerEvents = 'auto';
+            canvasElement.style.transform = 'translateZ(0)'; // stabilize rasterization at some DPRs
+        } catch (_) { }
+        // Debug pointer logging to diagnose any dead zones
+        try {
+            canvasElement.addEventListener('pointerdown', (e) => {
+                const r = canvasElement.getBoundingClientRect();
+                const gx = e.clientX - r.left;
+                const gy = e.clientY - r.top;
+                const scale = app.stage?.scale?.x || 1;
+                const sx = (gx - (app.stage?.x || 0)) / scale;
+                const sy = (gy - (app.stage?.y || 0)) / scale;
+                if (window.SpLogger) SpLogger.log('pointer.debug', { client: { x: e.clientX, y: e.clientY }, localCanvas: { x: gx, y: gy }, stage: { x: sx, y: sy }, rect: { w: Math.round(r.width), h: Math.round(r.height) }, dpr: window.devicePixelRatio || 1 });
+            }, { passive: true });
+        } catch (_) { }
 
         highlightContainer = new PIXI.Container(); // 'highlightContainer' opnieuw toewijzen
         app.stage.addChild(highlightContainer);
@@ -349,6 +411,10 @@ async function initGame() {
             }
         });
 
+        // Initial resize log after canvas insertion
+        resizeCanvas('init');
+        try { if (window.SpLogger) SpLogger.log('canvas.resize.ui', { reason: 'init' }); } catch (_) { }
+
         // Physics attack system is auto-initialized in physics-attack-v2.js
 
         // Add mouse drag event handlers for physics-based attacks
@@ -359,11 +425,15 @@ async function initGame() {
                 physicsAttackSystem.updateDrag(stagePos.x, stagePos.y);
             }
         });
-        
+
+        // Ensure pointer mapping stays accurate when layout changes
+        const ro = new ResizeObserver(() => resizeCanvas('observer'));
+        try { ro.observe(gameContainer); } catch (_) { }
+
         app.stage.on('pointerup', (event) => {
             if (app.stage.isDraggingAttack && physicsAttackSystem) {
                 app.stage.isDraggingAttack = false;
-                
+
                 // The target pawn was already set when we started dragging
                 physicsAttackSystem.endDrag();
                 app.stage.dragStartPawn = null;

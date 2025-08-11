@@ -52,7 +52,7 @@ class MenuSystem {
             </div>
         `;
         this.menuContainer.style.display = 'flex';
-        
+
         // Hide the game stats bar when returning to main menu
         const statsBar = document.querySelector('.game-stats-bar');
         if (statsBar) {
@@ -62,32 +62,67 @@ class MenuSystem {
 
     showSingleplayerMenu() {
         this.currentMenu = 'singleplayer';
-        // Start singleplayer immediately (simple flow)
-        try {
-            // Start client-only helpers
-            if (typeof window.startGamePatch === 'function') {
-                window.startGamePatch();
-            }
-            if (typeof window.startCycleFix === 'function') {
-                window.startCycleFix();
-            }
-            if (typeof window.startPhysicsAttackSync === 'function') {
-                window.startPhysicsAttackSync();
-            }
+        this.menuContainer.innerHTML = `
+            <div class="menu-screen singleplayer-menu">
+                <h2 class="menu-title">Single Player</h2>
+                <p style="text-align:center;margin-top:-10px;margin-bottom:16px;opacity:0.85">Select a difficulty to begin</p>
+                <div class="difficulty-buttons">
+                    <button class="menu-button primary" id="btn-easy">
+                        <span class="button-icon">🙂</span>
+                        <span>
+                            Easy Bot
+                            <div style="font-size:0.8em;opacity:0.9;margin-top:4px">Beginner-friendly, predictable</div>
+                        </span>
+                    </button>
+                    <button class="menu-button primary" id="btn-medium">
+                        <span class="button-icon">😼</span>
+                        <span>
+                            Medium Bot
+                            <div style="font-size:0.8em;opacity:0.9;margin-top:4px">Balanced challenge</div>
+                        </span>
+                    </button>
+                    <button class="menu-button primary" id="btn-hard">
+                        <span class="button-icon">👹</span>
+                        <span>
+                            Hard Bot
+                            <div style="font-size:0.8em;opacity:0.9;margin-top:4px">Aggressive, advanced tactics</div>
+                        </span>
+                    </button>
+                </div>
+                <div class="settings-buttons" style="margin-top:16px;gap:10px">
+                    <button class="menu-button back" onclick="menuSystem.showMainMenu()">
+                        <span class="button-icon">⬅️</span>
+                        <span class="button-text">Back</span>
+                    </button>
+                </div>
+            </div>
+        `;
 
-            // Hide menu and launch SP
-            this.menuContainer.style.display = 'none';
-            if (typeof window.initSimpleSingleplayer === 'function') {
-                window.initSimpleSingleplayer();
-            } else {
-                alert('Singleplayer module missing.');
+        const startWithDifficulty = (level) => {
+            localStorage.setItem('sp_difficulty', level);
+            try { if (window.SpLogger) SpLogger.setDifficulty(level); } catch (_) { }
+            try {
+                if (typeof window.startGamePatch === 'function') window.startGamePatch();
+                if (typeof window.startCycleFix === 'function') window.startCycleFix();
+                if (typeof window.startPhysicsAttackSync === 'function') window.startPhysicsAttackSync();
+
+                this.menuContainer.style.display = 'none';
+                if (typeof window.initSimpleSingleplayer === 'function') {
+                    window.initSimpleSingleplayer();
+                } else {
+                    alert('Singleplayer module missing.');
+                    this.showMainMenu();
+                }
+            } catch (e) {
+                console.error('Failed to start singleplayer:', e);
+                alert('Failed to start singleplayer. See console for details.');
                 this.showMainMenu();
             }
-        } catch (e) {
-            console.error('Failed to start singleplayer:', e);
-            alert('Failed to start singleplayer. See console for details.');
-            this.showMainMenu();
-        }
+        };
+
+        this.menuContainer.querySelector('#btn-easy').onclick = () => startWithDifficulty('easy');
+        this.menuContainer.querySelector('#btn-medium').onclick = () => startWithDifficulty('medium');
+        this.menuContainer.querySelector('#btn-hard').onclick = () => startWithDifficulty('hard');
     }
 
     showMultiplayerMenu() {
@@ -96,7 +131,7 @@ class MenuSystem {
         if (!window.socket && typeof initializeLobby === 'function') {
             initializeLobby();
         }
-        
+
         // Start game patches and systems for multiplayer
         if (typeof window.startGamePatch === 'function') {
             window.startGamePatch();
@@ -110,7 +145,7 @@ class MenuSystem {
         if (typeof window.startCardFlipFix === 'function') {
             window.startCardFlipFix();
         }
-        
+
         // Hide menu and show existing lobby screen
         this.menuContainer.style.display = 'none';
         document.getElementById('lobby-screen').classList.add('active');
@@ -118,13 +153,13 @@ class MenuSystem {
 
     showSettings() {
         this.currentMenu = 'settings';
-        
+
         // Get current settings
-        const currentVolume = (typeof soundManager !== 'undefined' && soundManager.globalVolume !== undefined) 
+        const currentVolume = (typeof soundManager !== 'undefined' && soundManager.globalVolume !== undefined)
             ? soundManager.globalVolume : 0.5;
         const currentMusicEnabled = localStorage.getItem('musicEnabled') !== 'false';
         const currentSoundEnabled = localStorage.getItem('soundEnabled') !== 'false';
-        
+
         this.menuContainer.innerHTML = `
             <div class="menu-screen settings-menu">
                 <h2 class="menu-title">Settings</h2>
@@ -184,7 +219,7 @@ class MenuSystem {
                 </div>
             </div>
         `;
-        
+
         // Add event listeners
         document.getElementById('settings-volume').addEventListener('input', (e) => {
             document.getElementById('settings-volume-value').textContent = Math.round(e.target.value * 100) + '%';
@@ -251,30 +286,30 @@ class MenuSystem {
         const musicEnabled = document.getElementById('settings-music').checked;
         const soundEnabled = document.getElementById('settings-sound').checked;
         const quality = document.getElementById('settings-quality').value;
-        
+
         // Save to localStorage
         localStorage.setItem('volume', volume);
         localStorage.setItem('musicEnabled', musicEnabled);
         localStorage.setItem('soundEnabled', soundEnabled);
         localStorage.setItem('graphicsQuality', quality);
-        
+
         // Apply settings
         if (typeof soundManager !== 'undefined') {
             soundManager.setVolume(parseFloat(volume));
             soundManager.musicEnabled = musicEnabled;
             soundManager.soundEnabled = soundEnabled;
         }
-        
+
         showToast('Settings saved!');
         this.showMainMenu();
     }
 
 
-    
+
     hideMenu() {
         this.menuContainer.style.display = 'none';
     }
-    
+
     hide() {
         this.hideMenu();
     }

@@ -26,7 +26,8 @@
             listeners: fns ? fns.size : 0,
             payload: data,
           });
-        } catch (_) {}
+          no
+        } catch (_) { }
         if (!fns || fns.size === 0) return;
         for (const fn of fns) {
           try {
@@ -44,6 +45,7 @@
     initiativePlayerPerRound: {},
     cycleInitiativePlayer: null,
     aiCardsByRound: {},
+    difficulty: 'easy',
   };
 
   // --- Utility helpers ---
@@ -57,7 +59,7 @@
       const p1 = gs.players[PLAYER_1]?.pawns || [];
       const p2 = gs.players[PLAYER_2]?.pawns || [];
       const found = [...p1, ...p2].find((p) => p && p.id === pawnId) || null;
-      console.log(SP_LOG_PREFIX, "getClientPawnById", { pawnId, found: !!found, inP1: !!p1.find(p=>p&&p.id===pawnId), inP2: !!p2.find(p=>p&&p.id===pawnId) });
+      console.log(SP_LOG_PREFIX, "getClientPawnById", { pawnId, found: !!found, inP1: !!p1.find(p => p && p.id === pawnId), inP2: !!p2.find(p => p && p.id === pawnId) });
       return found;
     } catch (e) {
       console.error(SP_LOG_PREFIX, "getClientPawnById error", e);
@@ -140,6 +142,36 @@
     return pick.map((c, i) => ({ ...c, id: `ai_c${i}_${Date.now()}` }));
   }
 
+  function chooseAICardsByDifficulty(playerCards) {
+    const diff = spState.difficulty || 'easy';
+    let ai;
+    if (diff === 'easy') {
+      ai = chooseAICardsPresetOnly();
+      if (Math.random() < 0.3) ai = ai.map((c) => ({ ...c, attack: Math.max(1, (c.attack || 1) - 1) }));
+    } else if (diff === 'medium') {
+      ai = chooseAICardsAvoidingTie(playerCards);
+    } else {
+      const candidateA = [
+        { hp: 2, stamina: 1, attack: 4 },
+        { hp: 2, stamina: 2, attack: 3 },
+        { hp: 1, stamina: 2, attack: 4 },
+      ];
+      const candidateB = [
+        { hp: 3, stamina: 2, attack: 2 },
+        { hp: 2, stamina: 3, attack: 2 },
+        { hp: 2, stamina: 1, attack: 4 },
+      ];
+      const options = [candidateA, candidateB, ...[chooseAICardsAvoidingTie(playerCards)]];
+      const scored = options.map((arr) => {
+        const s = arr.reduce((acc, c) => ({ atk: acc.atk + (c.attack || 0), st: acc.st + (c.stamina || 0) }), { atk: 0, st: 0 });
+        return { arr, score: s.atk * 10 + s.st };
+      }).sort((a, b) => b.score - a.score);
+      ai = scored[0].arr.map((c, i) => ({ ...c, id: `ai_c${i}_${Date.now()}` }));
+    }
+    try { if (window.SpLogger) SpLogger.log('action.decision', { actor: 'AI', type: 'defineCards', difficulty: diff, cards: ai }); } catch (_) { }
+    return ai;
+  }
+
   function computeInitiative(p1Cards, p2Cards) {
     const p1 = sumStats(p1Cards);
     const p2 = sumStats(p2Cards);
@@ -155,7 +187,7 @@
   function aiDefineForCurrentRound() {
     const round = gameState.roundNumber;
     // Pick AI cards for this round independently
-    const aiCards = chooseAICardsPresetOnly();
+    const aiCards = chooseAICardsByDifficulty([]);
     // Store into P2 available list for later linking
     gameState.players[PLAYER_2].cardsAvailableForLinking = aiCards.map((c) => ({ ...c }));
     // Notify that opponent defined
@@ -199,9 +231,10 @@
     if (!pawn) {
       const preferredY = playerNum === PLAYER_2 ? 1 : (BOARD_SIZE - 2);
       pawn = pawns.find((p) => p && !p.isActive && p.gridY === preferredY) ||
-             pawns.find((p) => p && !p.isActive);
+        pawns.find((p) => p && !p.isActive);
     }
     if (!card || !pawn) return false;
+    try { if (window.SpLogger && playerNum === PLAYER_2) SpLogger.log('link.decision', { player: playerNum, cardStats: { hp: card.hp, stamina: card.stamina, attack: card.attack }, pawnPosition: { x: pawn.gridX, y: pawn.gridY }, pawnId: pawn.id }); } catch (_) { }
     // Mark linked via dispatch so client updates its state/UI uniformly
     socket._dispatch("cardLinked", { cardId: card.id, pawnId: pawn.id, playerNum });
     return true;
@@ -330,10 +363,19 @@
     if (pawns.length === 0) return false;
     // Choose pawn with a valid move closer to haven
     const targetHavens = ALL_TARGET_HAVENS_P2;
+    const diff = spState.difficulty || 'easy';
     for (const pawn of pawns) {
       // Try an attack first if adjacent enemies exist
-      const targets = (typeof getAttackTargets === "function") ? getAttackTargets(pawn) : [];
+      let targets = (typeof getAttackTargets === "function") ? getAttackTargets(pawn) : [];
       if (targets && targets.length > 0) {
+        if (diff === 'hard') {
+          targets = [...targets].sort((a, b) => {
+            const atk = pawn.linkedCard?.attack || 0;
+            const aHP = a.currentHP ?? a.linkedCard?.hp ?? 0;
+            const bHP = b.currentHP ?? b.linkedCard?.hp ?? 0;
+            return (Math.min(atk, bHP)) - (Math.min(atk, aHP));
+          }).reverse();
+        }
         const targetPawn = targets[0];
         // Resolve attack locally (basic server mirror)
         const attackerAttack = pawn.linkedCard?.attack || 0;
@@ -352,7 +394,7 @@
         if (typeof targetPawn.updateBars === "function") targetPawn.updateBars();
 
         // Optional random hit animation on defender
-        try { applyRandomHitAnimation(targetPawn); } catch (_) {}
+        try { applyRandomHitAnimation(targetPawn); } catch (_) { }
 
         // Eliminations and attacker move into defender square if defender died and attacker survived
         let eliminated = [];
@@ -374,6 +416,7 @@
           eliminated.push(pawn.id);
         }
 
+        try { if (window.SpLogger) SpLogger.log('action.decision', { actor: 'AI', type: 'attack', attackerId: pawn.id, targetId: targetPawn.id, difficulty: diff, pre: { attackerHP, defenderHP, attackerAttack, defenderAttack } }); } catch (_) { }
         socket._dispatch("actionPerformed", {
           actionType: "attack",
           pawnId: pawn.id,
@@ -399,21 +442,18 @@
         });
         return true;
       }
-      const moves = (typeof getPossibleMoves === "function") ? getPossibleMoves(pawn) : [];
+      let moves = (typeof getPossibleMoves === "function") ? getPossibleMoves(pawn) : [];
       if (!moves || moves.length === 0) continue;
-      // Pick move that minimizes Manhattan distance to any haven
-      let best = null;
-      let bestScore = Infinity;
-      for (const m of moves) {
-        const score = distanceToAny(targetHavens, m.x, m.y);
-        if (score < bestScore) {
-          best = m;
-          bestScore = score;
-        }
+      if (diff === 'easy' && Math.random() < 0.3) {
+        moves = [moves[Math.floor(Math.random() * moves.length)]];
+      } else if (diff === 'hard') {
+        moves = [...moves].sort((a, b) => distanceToAny(targetHavens, a.x, a.y) - distanceToAny(targetHavens, b.x, b.y));
       }
+      const best = moves[0] || null;
       if (best) {
         // Apply move locally and dispatch as if from server
         const cost = Math.max(1, Math.abs(best.x - pawn.gridX) + Math.abs(best.y - pawn.gridY));
+        try { if (window.SpLogger) SpLogger.log('action.decision', { actor: 'AI', type: 'move', pawnId: pawn.id, from: { x: pawn.gridX, y: pawn.gridY }, to: { x: best.x, y: best.y }, cost, difficulty: diff }); } catch (_) { }
         pawn.gridX = best.x;
         pawn.gridY = best.y;
         pawn.remainingStamina = Math.max(0, (pawn.remainingStamina || 0) - cost);
@@ -490,9 +530,11 @@
       console.log(SP_LOG_PREFIX, "switchTurnTo ignored - GAME_OVER");
       return;
     }
+    const fromPlayer = gameState.currentPlayer;
     gameState.currentPlayer = playerNum;
     gameState.currentPhase = "ACTION";
     console.log(SP_LOG_PREFIX, "switchTurnTo", { playerNum });
+    try { if (window.SpLogger) { SpLogger.log("turn.switched", { from: fromPlayer, to: playerNum, cycle: gameState.cycleNumber, round: gameState.roundNumber }); SpLogger.noteTurnSwitch(); } } catch (_) { }
     socket._dispatch("nextTurn", { currentPlayer: playerNum });
     // If switching to AI, ensure it acts or passes immediately
     if (playerNum === PLAYER_2) {
@@ -604,6 +646,7 @@
     gameState.cycleNumber = (gameState.cycleNumber || 1) + 1;
     gameState.roundNumber = 1;
     gameState.currentPhase = currentRoundDefinePhaseLabel(1);
+    try { if (window.SpLogger) { SpLogger.log("cycle.start", { cycle: gameState.cycleNumber }); SpLogger.noteCycleStart(); } } catch (_) { }
     // Reset pawns to inactive for both players
     [PLAYER_1, PLAYER_2].forEach((pn) => {
       (gameState.players[pn]?.pawns || []).forEach((p) => {
@@ -637,13 +680,15 @@
         // Store player's defined cards for this round
         const round = gameState.roundNumber;
         const playerCards = (data && data.cards) || [];
+        try { if (window.SpLogger) SpLogger.log("define.cards", { round, cards: playerCards }); } catch (_) { }
         // Give cards temporary ids if missing
         playerCards.forEach((c, i) => {
           if (!c.id) c.id = `p${PLAYER_1}_r${round}_c${i}_${Date.now()}`;
         });
 
-        // Select AI cards to avoid tie
-        const aiCards = chooseAICardsAvoidingTie(playerCards);
+        // Select AI cards per difficulty
+        const aiCards = chooseAICardsByDifficulty(playerCards);
+        try { if (window.SpLogger) SpLogger.log('action.decision', { actor: 'P1', type: 'defineCards', round, cards: playerCards }); } catch (_) { }
 
         // Update available lists as in client 'cardsRevealed'
         gameState.players[PLAYER_1].cardsAvailableForLinking = playerCards.map((c) => ({ ...c }));
@@ -657,7 +702,7 @@
         // Dispatch reveal (mirrors server payload)
         const p1Totals = sumStats(playerCards);
         const p2Totals = sumStats(aiCards);
-        socket._dispatch("cardsRevealed", {
+        const revealPayload = {
           player1Cards: playerCards,
           player2Cards: aiCards,
           initiativePlayer: initiative,
@@ -665,17 +710,21 @@
           p2TotalAttack: p2Totals.attack,
           p1TotalStamina: p1Totals.stamina,
           p2TotalStamina: p2Totals.stamina,
-        });
+        };
+        socket._dispatch("cardsRevealed", revealPayload);
+        try { if (window.SpLogger) SpLogger.log("cards.revealed", { round, ...revealPayload }); } catch (_) { }
 
         // Advance to linking
         setTimeout(() => {
           gameState.currentPhase = currentRoundLinkPhaseLabel(round);
           gameState.currentPlayer = initiative;
-          socket._dispatch("startLinking", {
+          const linkingPayload = {
             initiativePlayer: initiative,
             currentPhase: gameState.currentPhase,
             currentPlayer: gameState.currentPlayer,
-          });
+          };
+          socket._dispatch("startLinking", linkingPayload);
+          try { if (window.SpLogger) SpLogger.log("phase.link.start", linkingPayload); } catch (_) { }
           // If AI starts linking, auto-link one
           if (initiative === PLAYER_2) {
             setTimeout(ensureAILinkingIfTurn, 150);
@@ -688,6 +737,13 @@
         const cardId = data?.cardId;
         const pawnId = data?.pawnId;
         if (!cardId || !pawnId) return;
+        try {
+          const p = getClientPawnById(pawnId);
+          if (window.SpLogger) {
+            SpLogger.log("link.decision", { player: PLAYER_1, round: gameState.roundNumber, cardId, pawnId, pawnPosition: p ? { x: p.gridX, y: p.gridY } : null });
+            SpLogger.log("link.card", { player: PLAYER_1, round: gameState.roundNumber, cardId, pawnId });
+          }
+        } catch (_) { }
         socket._dispatch("cardLinked", { cardId, pawnId, playerNum: PLAYER_1 });
         // After player's link, advance turn logic; AI will link on its turn exactly once
         setTimeout(() => {
@@ -697,6 +753,7 @@
       }
       case "playerCannotLink": {
         // Player cannot link; advance turn logic; AI links on its turn
+        try { if (window.SpLogger) SpLogger.log("link.cannot", { player: PLAYER_1, round: gameState.roundNumber }); } catch (_) { }
         setTimeout(() => {
           finishLinkingOrNextTurn(PLAYER_1);
         }, 150);
@@ -714,8 +771,10 @@
         }
         if (actionType === "move") {
           console.log(SP_LOG_PREFIX, "[P1] move received", { pawnId, before: { x: actingPawn.gridX, y: actingPawn.gridY, rs: actingPawn.remainingStamina }, targetX, targetY });
+          try { if (window.SpLogger) SpLogger.log('action.decision', { actor: 'P1', type: 'move', pawnId, from: { x: actingPawn.gridX, y: actingPawn.gridY }, to: { x: targetX, y: targetY } }); } catch (_) { }
           // Determine move cost from client's computed paths when available
           let cost = 1;
+          const fromX = actingPawn.gridX, fromY = actingPawn.gridY;
           if (typeof getPossibleMoves === "function") {
             const options = getPossibleMoves(actingPawn) || [];
             const match = options.find((m) => m && m.x === targetX && m.y === targetY);
@@ -730,6 +789,7 @@
           actingPawn.gridY = targetY;
           const beforeRS = actingPawn.remainingStamina;
           actingPawn.remainingStamina = Math.max(0, (actingPawn.remainingStamina || 0) - cost);
+          try { if (window.SpLogger) SpLogger.log("action.move", { actor: PLAYER_1, pawnId, from: { x: fromX, y: fromY }, to: { x: targetX, y: targetY }, cost, rsBefore: beforeRS, rsAfter: actingPawn.remainingStamina, cycle: gameState.cycleNumber, round: gameState.roundNumber }); } catch (_) { }
           console.log(SP_LOG_PREFIX, "[P1] apply stamina", { beforeRS, afterRS: actingPawn.remainingStamina });
           if (typeof actingPawn.updateBars === "function") {
             console.log(SP_LOG_PREFIX, "[P1] calling updateBars after move");
@@ -760,6 +820,7 @@
             switchTurnTo(PLAYER_2);
             return;
           }
+          try { if (window.SpLogger) SpLogger.log('action.decision', { actor: 'P1', type: 'attack', attackerId: actingPawn.id, targetId: targetPawn.id }); } catch (_) { }
           const attackerAttack = actingPawn.linkedCard?.attack || 0;
           const defenderHP = targetPawn.currentHP ?? targetPawn.linkedCard?.hp ?? 0;
           const defenderAttack = targetPawn.linkedCard?.attack || 0;
@@ -768,18 +829,12 @@
           const newDefHP = Math.max(0, defenderHP - attackerAttack);
           const newAtkHP = newDefHP > 0 && defenderAttack > 0 ? Math.max(0, attackerHP - defenderAttack) : attackerHP;
 
-          try { applyRandomHitAnimation(targetPawn); } catch (_) {}
+          try { applyRandomHitAnimation(targetPawn); } catch (_) { }
 
           targetPawn.currentHP = newDefHP;
           actingPawn.currentHP = newAtkHP;
           const beforeRSAtk = actingPawn.remainingStamina;
           actingPawn.remainingStamina = Math.max(0, (actingPawn.remainingStamina || 0) - 1);
-          console.log(SP_LOG_PREFIX, "[P1] attack stamina", { beforeRS: beforeRSAtk, afterRS: actingPawn.remainingStamina });
-          if (typeof actingPawn.updateBars === "function") actingPawn.updateBars();
-          if (typeof targetPawn.updateBars === "function") targetPawn.updateBars();
-          console.log(SP_LOG_PREFIX, "[P1] attack applied", { newAtkHP, newDefHP, attackerAfter: { hp: actingPawn.currentHP, rs: actingPawn.remainingStamina } });
-          console.log(SP_LOG_PREFIX, "has actionPerformed listeners?", socket.hasListeners("actionPerformed"));
-
           let eliminated = [];
           let attackerMovedTo = null;
           if (newDefHP <= 0) {
@@ -797,6 +852,12 @@
           if (newAtkHP <= 0) {
             eliminated.push(actingPawn.id);
           }
+          try { if (window.SpLogger) SpLogger.log("action.attack", { actor: PLAYER_1, attackerId: actingPawn.id, defenderId: targetPawn.id, attackerHPBefore: attackerHP, defenderHPBefore: defenderHP, attackerHPAfter: newAtkHP, defenderHPAfter: newDefHP, eliminated, movedTo: attackerMovedTo, rsBefore: beforeRSAtk, rsAfter: actingPawn.remainingStamina, cycle: gameState.cycleNumber, round: gameState.roundNumber }); } catch (_) { }
+          console.log(SP_LOG_PREFIX, "[P1] attack stamina", { beforeRS: beforeRSAtk, afterRS: actingPawn.remainingStamina });
+          if (typeof actingPawn.updateBars === "function") actingPawn.updateBars();
+          if (typeof targetPawn.updateBars === "function") targetPawn.updateBars();
+          console.log(SP_LOG_PREFIX, "[P1] attack applied", { newAtkHP, newDefHP, attackerAfter: { hp: actingPawn.currentHP, rs: actingPawn.remainingStamina } });
+          console.log(SP_LOG_PREFIX, "has actionPerformed listeners?", socket.hasListeners("actionPerformed"));
 
           socket._dispatch("actionPerformed", {
             actionType: "attack",
@@ -825,6 +886,7 @@
         break;
       }
       case "playerCannotAct": {
+        try { if (window.SpLogger) SpLogger.log("turn.cannotAct", { player: gameState.currentPlayer, cycle: gameState.cycleNumber, round: gameState.roundNumber }); } catch (_) { }
         handlePlayerCannotAct();
         break;
       }
@@ -854,6 +916,7 @@
     console.log(SP_LOG_PREFIX, "Initializing singleplayer...");
     // Mark mode
     gameState.singleplayerMode = true;
+    try { if (window.SpLogger) SpLogger.log("session.start", { mode: "singleplayer" }); } catch (_) { }
     // Ensure window.gameState points to the same object for scripts that read from window
     try {
       if (typeof window !== 'undefined') {

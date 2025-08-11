@@ -5,6 +5,7 @@
 const express = require("express");
 const http = require("http");
 const path = require("path");
+const fs = require("fs");
 const { Server } = require("socket.io");
 
 const app = express();
@@ -13,6 +14,47 @@ const io = new Server(server);
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
+
+// JSON body parsing for API endpoints
+app.use(express.json({ limit: "5mb" }));
+
+// --- Singleplayer Log Endpoint ---
+const SP_LOG_DIR = path.join(__dirname, "logs", "singleplayer");
+
+function sanitizeForFilename(input) {
+  return String(input || "").replace(/[^a-zA-Z0-9_.-]/g, "_").slice(0, 128);
+}
+
+app.post("/api/sp-log", async (req, res) => {
+  try {
+    const { sessionId, events } = req.body || {};
+    if (!sessionId || !Array.isArray(events) || events.length === 0) {
+      return res.status(400).json({ ok: false, error: "Invalid payload" });
+    }
+
+    // Ensure directory exists
+    fs.mkdirSync(SP_LOG_DIR, { recursive: true });
+    const filePath = path.join(SP_LOG_DIR, `${sanitizeForFilename(sessionId)}.jsonl`);
+
+    // Append each event as JSONL
+    const lines = events.map((e) => {
+      const safe = {
+        sessionId,
+        ts: Number(e?.ts) || Date.now(),
+        event: String(e?.event || "unknown"),
+        data: e?.data ?? null,
+      };
+      return JSON.stringify(safe);
+    });
+    fs.appendFileSync(filePath, lines.join("\n") + "\n");
+
+    return res.json({ ok: true, written: events.length });
+  } catch (err) {
+    console.error("/api/sp-log error:", err);
+    return res.status(500).json({ ok: false });
+  }
+});
+// --- End Singleplayer Log Endpoint ---
 
 // --- Game Constants (Server-Side) ---
 const BOARD_SIZE = 11;

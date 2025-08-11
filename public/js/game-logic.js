@@ -10,7 +10,7 @@ const TimerManager = {
   timerId: null,
   timerDiv: null,
   timerCount: null,
-  
+
   init() {
     this.timerDiv = document.getElementById("phase-timer");
     this.timerCount = document.getElementById("phase-timer-count");
@@ -28,14 +28,14 @@ const TimerManager = {
   },
 
   start(seconds, onEndCallback) {
-    this.stop(); 
+    this.stop();
 
     if (!this.timerDiv || !this.timerCount) {
-        this.init();
-        if (!this.timerDiv || !this.timerCount) {
-            console.error("Timer UI elements not found, cannot start timer.");
-            return;
-        }
+      this.init();
+      if (!this.timerDiv || !this.timerCount) {
+        console.error("Timer UI elements not found, cannot start timer.");
+        return;
+      }
     }
 
     this.timerDiv.style.display = "block";
@@ -58,21 +58,21 @@ const TimerManager = {
 };
 
 function autoLinkAction() {
-    if (gameState.currentPhase.endsWith("LINKING") && gameState.currentPlayer === gameState.playerNumber) {
-        const availableCards = (gameState.players[gameState.playerNumber]?.cardsAvailableForLinking || []).filter(card => card && !card.isLinked);
-        const availablePawns = (gameState.players[gameState.playerNumber]?.pawns || []).filter(pawn => pawn && !pawn.isActive && !pawn.linkedCard);
+  if (gameState.currentPhase.endsWith("LINKING") && gameState.currentPlayer === gameState.playerNumber) {
+    const availableCards = (gameState.players[gameState.playerNumber]?.cardsAvailableForLinking || []).filter(card => card && !card.isLinked);
+    const availablePawns = (gameState.players[gameState.playerNumber]?.pawns || []).filter(pawn => pawn && !pawn.isActive && !pawn.linkedCard);
 
-        if (availableCards.length > 0 && availablePawns.length > 0 && typeof socket !== "undefined" && typeof gameSession !== "undefined") {
-            const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-            const randomPawn = availablePawns[Math.floor(Math.random() * availablePawns.length)];
-            showToast("⏳ Time's up! Randomly linking a card.");
-            socket.emit("linkCard", { roomCode: gameSession.roomCode, cardId: randomCard.id, pawnId: randomPawn.id });
-            if (typeof soundManager !== "undefined") { soundManager.playSound("ui_link"); }
-        } else {
-            showToast("⏳ Time's up! Skipping linking.");
-            socket.emit("playerCannotLink", { roomCode: gameSession.roomCode });
-        }
+    if (availableCards.length > 0 && availablePawns.length > 0 && typeof socket !== "undefined" && typeof gameSession !== "undefined") {
+      const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+      const randomPawn = availablePawns[Math.floor(Math.random() * availablePawns.length)];
+      showToast("⏳ Time's up! Randomly linking a card.");
+      socket.emit("linkCard", { roomCode: gameSession.roomCode, cardId: randomCard.id, pawnId: randomPawn.id });
+      if (typeof soundManager !== "undefined") { soundManager.playSound("ui_link"); }
+    } else {
+      showToast("⏳ Time's up! Skipping linking.");
+      socket.emit("playerCannotLink", { roomCode: gameSession.roomCode });
     }
+  }
 }
 
 // --- Helper Functions ---
@@ -83,24 +83,24 @@ function gridToPixel(x, y) {
 
 function pixelToGrid(x, y) {
   const size = typeof CELL_SIZE !== "undefined" ? CELL_SIZE : 50;
-  
+
   // Account for stage scaling and offset when converting pixel to grid
   if (typeof app !== "undefined" && app && app.stage) {
     // Get the current stage transformation
     const stageScale = app.stage.scale.x; // Assuming uniform scaling
     const stageOffsetX = app.stage.x;
     const stageOffsetY = app.stage.y;
-    
+
     // Convert screen coordinates to stage coordinates
     const stageX = (x - stageOffsetX) / stageScale;
     const stageY = (y - stageOffsetY) / stageScale;
-    
-    return { 
-      x: Math.floor(stageX / size), 
-      y: Math.floor(stageY / size) 
+
+    return {
+      x: Math.floor(stageX / size),
+      y: Math.floor(stageY / size)
     };
   }
-  
+
   // Fallback to simple conversion if no stage available
   return { x: Math.floor(x / size), y: Math.floor(y / size) };
 }
@@ -111,13 +111,13 @@ function globalToStageCoords(globalX, globalY) {
     const stageScale = app.stage.scale.x;
     const stageOffsetX = app.stage.x;
     const stageOffsetY = app.stage.y;
-    
+
     return {
       x: (globalX - stageOffsetX) / stageScale,
       y: (globalY - stageOffsetY) / stageScale
     };
   }
-  
+
   // Fallback - return global coords unchanged
   return { x: globalX, y: globalY };
 }
@@ -292,6 +292,31 @@ function initializeGameSocketEvents() {
   // --- actionPerformed handler (met sound/shake integratie) ---
   socket.on("actionPerformed", (data) => {
     console.log("Action performed received:", data);
+    try {
+      if (window.SpLogger) {
+        if (data.actionType === 'move') {
+          SpLogger.log('action.server.move', {
+            pawnId: data.pawnId,
+            player: data.playerNum,
+            to: { x: data.targetX, y: data.targetY },
+            updated: data.updatedPawn || null,
+            cycle: gameState.cycleNumber,
+            round: gameState.roundNumber,
+          });
+        } else if (data.actionType === 'attack') {
+          SpLogger.log('action.server.attack', {
+            pawnId: data.pawnId,
+            player: data.playerNum,
+            attackerMovedTo: data.attackerMovedTo || null,
+            damage: data.damageDealt || null,
+            eliminated: data.eliminatedPawnIDs || [],
+            updated: data.updatedPawn || null,
+            cycle: gameState.cycleNumber,
+            round: gameState.roundNumber,
+          });
+        }
+      }
+    } catch (_) { }
     let eliminationOccurred = false;
 
     // --- Show Floating Damage Text & Play Bleed Sound ---
@@ -431,7 +456,7 @@ function initializeGameSocketEvents() {
     // --- Update Acting Pawn (als het overleefde) ---
     const actingPawn = getPawnById(data.pawnId);
     console.log("[actionPerformed] actingPawn lookup", { id: data.pawnId, found: !!actingPawn });
-      if (actingPawn) {
+    if (actingPawn) {
       if (data.updatedPawn) {
         const before = { hp: actingPawn.currentHP, rs: actingPawn.remainingStamina };
         actingPawn.currentHP = data.updatedPawn.currentHP;
@@ -686,6 +711,36 @@ function initializeGameSocketEvents() {
         pawn.updateStatsDisplay(card, card.hp);
       card.isLinked = true; // Markeer in bronlijst
 
+      // Log applied link with pawn position and card stats
+      try {
+        if (window.SpLogger) {
+          SpLogger.log("link.applied", {
+            player: data.playerNum,
+            pawnId: pawn.id,
+            cardId: card.id,
+            position: { x: pawn.gridX, y: pawn.gridY },
+            stats: { hp: card.hp, stamina: card.stamina, attack: card.attack },
+            cycle: gameState.cycleNumber,
+            round: gameState.roundNumber,
+          });
+          SpLogger.log("link.decision", {
+            player: data.playerNum,
+            cardStats: { hp: card.hp, stamina: card.stamina, attack: card.attack },
+            pawnPosition: { x: pawn.gridX, y: pawn.gridY },
+            pawnId: pawn.id,
+            cycle: gameState.cycleNumber,
+            round: gameState.roundNumber,
+          });
+          const p1 = (gameState.players[PLAYER_1]?.pawns || [])
+            .map((p) => p ? { id: p.id, pl: p.player, x: p.gridX, y: p.gridY, act: !!p.isActive, hp: p.currentHP, rs: p.remainingStamina } : null)
+            .filter(Boolean);
+          const p2 = (gameState.players[PLAYER_2]?.pawns || [])
+            .map((p) => p ? { id: p.id, pl: p.player, x: p.gridX, y: p.gridY, act: !!p.isActive, hp: p.currentHP, rs: p.remainingStamina } : null)
+            .filter(Boolean);
+          SpLogger.log("board.snapshot", { when: "after.link", cycle: gameState.cycleNumber, round: gameState.roundNumber, p1, p2 });
+        }
+      } catch (_) { }
+
       // Update activePawnsThisCycle (optioneel, als client dit bijhoudt)
       // if (!gameState.activePawnsThisCycle[data.playerNum]) gameState.activePawnsThisCycle[data.playerNum] = [];
       // if (!gameState.activePawnsThisCycle[data.playerNum].some(ap => ap?.id === pawn.id)) {
@@ -780,11 +835,11 @@ function initializeGameSocketEvents() {
 
     // Reset timer when action phase starts
     if (gameState.currentPlayer === gameState.playerNumber) {
-        TimerManager.start(40, () => {
-            showToast("⏳ Time's up! Ending turn.");
-            if(typeof window.endTurn === 'function') window.endTurn();
-        });
-        console.log("Timer started for action phase");
+      TimerManager.start(40, () => {
+        showToast("⏳ Time's up! Ending turn.");
+        if (typeof window.endTurn === 'function') window.endTurn();
+      });
+      console.log("Timer started for action phase");
     }
     // Reset hasActed flag, stamina, and alpha lokaal
     console.log(
@@ -810,7 +865,7 @@ function initializeGameSocketEvents() {
         } else {
           p.pixiObject.alpha = 1.0; // Full opacity for all other pawns
         }
-        
+
         // Reset tint to normal for all pawns
         if (p.graphics) {
           p.graphics.tint = 0xFFFFFF; // Always reset to white (no tint)
@@ -850,21 +905,31 @@ function initializeGameSocketEvents() {
 
     // Reset the timer when turn changes
     if (gameState.currentPlayer === gameState.playerNumber) {
-        TimerManager.start(40, () => {
-            showToast("⏳ Time's up! Ending turn.");
-            if(typeof window.endTurn === 'function') window.endTurn();
-        });
-        console.log("Timer reset due to turn change to next player");
+      TimerManager.start(40, () => {
+        showToast("⏳ Time's up! Ending turn.");
+        if (typeof window.endTurn === 'function') window.endTurn();
+      });
+      console.log("Timer reset due to turn change to next player");
     }
 
     console.log(`Phase set to ACTION for P${gameState.currentPlayer}'s turn.`);
     if (typeof handlePlayerTurn === "function") handlePlayerTurn();
+    try {
+      if (window.SpLogger) {
+        const p1 = (gameState.players[PLAYER_1]?.pawns || []).map((p) => p ? { id: p.id, pl: p.player, x: p.gridX, y: p.gridY, act: !!p.isActive, hp: p.currentHP, rs: p.remainingStamina } : null).filter(Boolean);
+        const p2 = (gameState.players[PLAYER_2]?.pawns || []).map((p) => p ? { id: p.id, pl: p.player, x: p.gridX, y: p.gridY, act: !!p.isActive, hp: p.currentHP, rs: p.remainingStamina } : null).filter(Boolean);
+        SpLogger.log('board.snapshot', { when: 'turn.switch', currentPlayer: gameState.currentPlayer, cycle: gameState.cycleNumber, round: gameState.roundNumber, p1, p2 });
+      }
+    } catch (_) { }
   });
   // 'newCycle' wordt afgehandeld door de patch
   socket.on("gameOver", (data) => {
     console.log("Game over received:", data);
     gameState.winner = data.winner;
     gameState.currentPhase = "GAME_OVER";
+
+    try { if (window.SpLogger) SpLogger.log("game.over", { winner: data.winner, winnerName: data.winnerName || null, reason: data.reason || null, cycle: gameState.cycleNumber, round: gameState.roundNumber }); } catch (_) { }
+    try { if (window.SpLogger) SpLogger.endSession({ winner: data.winner, reason: data.reason || null }); } catch (_) { }
 
     // Play winner sound
     if (typeof soundManager !== "undefined") {
@@ -1725,7 +1790,7 @@ function showActionTargets(pawn) {
       hl.position.set(p.x, p.y);
       hl.eventMode = "static";
       hl.cursor = CURSOR_POINTER;
-      
+
       // Add stamina cost text
       if (m.staminaCost !== undefined) {
         const staminaText = new PIXI.Text(m.staminaCost.toString(), {
@@ -1740,10 +1805,10 @@ function showActionTargets(pawn) {
         staminaText.position.set(CELL_SIZE / 2, CELL_SIZE / 2 - 2);
         staminaText.alpha = 0.8; // Semi-transparent
         hl.addChild(staminaText);
-        
+
         // Add remaining stamina text in smaller font below
         const remainingText = new PIXI.Text(`(${m.remainingStamina})`, {
-          fontFamily: 'Arial', 
+          fontFamily: 'Arial',
           fontSize: 10, // Even smaller
           fill: 0x004400, // Dark green to match
           stroke: 0xFFFFFF,
@@ -1754,7 +1819,7 @@ function showActionTargets(pawn) {
         remainingText.alpha = 0.7; // More transparent
         hl.addChild(remainingText);
       }
-      
+
       // Gebruik een closure om de correcte m.x, m.y vast te houden
       hl.on(
         "pointerdown",
@@ -1774,7 +1839,7 @@ function showActionTargets(pawn) {
       ); // Geef m.x, m.y mee aan de closure
       highlightContainer.addChild(hl);
     });
-    
+
     // Add attack highlighting (red)
     gameState.possibleAttackTargets.forEach((target) => {
       const p = gridToPixel(target.gridX, target.gridY);
@@ -1785,7 +1850,7 @@ function showActionTargets(pawn) {
       hl.position.set(p.x, p.y);
       hl.eventMode = "static";
       hl.cursor = CURSOR_POINTER;
-      
+
       // Add click handler for attack
       hl.on("pointerdown", (e) => {
         if (
@@ -1800,7 +1865,7 @@ function showActionTargets(pawn) {
             onAttackTargetClick(target);
         }
       });
-      
+
       highlightContainer.addChild(hl);
     });
   }
@@ -1840,9 +1905,9 @@ function getPossibleMoves(pawn) {
     // If we've used a step, we can check adjacent cells
     if (current.dist > 0) {
       // Add this position as a move target with stamina cost
-      moves.push({ 
-        x: current.x, 
-        y: current.y, 
+      moves.push({
+        x: current.x,
+        y: current.y,
         staminaCost: current.dist,
         remainingStamina: pawn.remainingStamina - current.dist
       });
@@ -1907,7 +1972,7 @@ function getValidAttackTargets(attackerPawn) {
 // Get all enemy pawns as valid targets for physics attacks
 function getAllEnemyPawns(attackerPawn) {
   const targets = [];
-  
+
   // Check attack stat
   if (!attackerPawn?.linkedCard?.attack || attackerPawn.linkedCard.attack <= 0)
     return targets;
@@ -1917,7 +1982,7 @@ function getAllEnemyPawns(attackerPawn) {
     return targets;
 
   const opponentPlayer = attackerPawn.player === PLAYER_1 ? PLAYER_2 : PLAYER_1;
-  
+
   // Get all opponent pawns
   if (gameState.players[opponentPlayer] && gameState.players[opponentPlayer].pawns) {
     gameState.players[opponentPlayer].pawns.forEach(pawn => {
@@ -1926,7 +1991,7 @@ function getAllEnemyPawns(attackerPawn) {
       }
     });
   }
-  
+
   return targets;
 } // End getAllEnemyPawns
 
@@ -1968,7 +2033,7 @@ function highlightAttackTargets(attackingPawn) {
 
   // Get all pawns in attack range
   const attackTargets = getAttackTargets(attackingPawn);
-  
+
   if (
     gameState.currentPlayer === gameState.playerNumber &&
     highlightContainer &&
@@ -1983,7 +2048,7 @@ function highlightAttackTargets(attackingPawn) {
       hl.position.set(p.x, p.y);
       hl.eventMode = "static";
       hl.cursor = CURSOR_POINTER;
-      
+
       // Add click handler for attack
       hl.on("pointerdown", (e) => {
         if (
@@ -1998,7 +2063,7 @@ function highlightAttackTargets(attackingPawn) {
             onAttackTargetClick(target);
         }
       });
-      
+
       highlightContainer.addChild(hl);
     });
   }
@@ -2007,13 +2072,13 @@ function highlightAttackTargets(attackingPawn) {
 // Get pawns that can be attacked by the given pawn
 function getAttackTargets(attackingPawn) {
   if (!attackingPawn || !attackingPawn.linkedCard) return [];
-  
+
   const targets = [];
   const allPawns = [
     ...(gameState.players[PLAYER_1]?.pawns || []),
     ...(gameState.players[PLAYER_2]?.pawns || [])
   ];
-  
+
   // Check adjacent squares for enemy pawns
   const adjacentPositions = [
     { x: attackingPawn.gridX - 1, y: attackingPawn.gridY }, // Left
@@ -2021,10 +2086,10 @@ function getAttackTargets(attackingPawn) {
     { x: attackingPawn.gridX, y: attackingPawn.gridY - 1 }, // Up
     { x: attackingPawn.gridX, y: attackingPawn.gridY + 1 }  // Down
   ];
-  
+
   adjacentPositions.forEach(pos => {
     if (isValidCoord(pos.x, pos.y)) {
-      const targetPawn = allPawns.find(p => 
+      const targetPawn = allPawns.find(p =>
         p && p.isActive && p.gridX === pos.x && p.gridY === pos.y && p.player !== attackingPawn.player
       );
       if (targetPawn) {
@@ -2032,7 +2097,7 @@ function getAttackTargets(attackingPawn) {
       }
     }
   });
-  
+
   return targets;
 }
 
@@ -2064,13 +2129,13 @@ function onAttackTargetClick(targetPawn) {
     if (typeof cancelActionSelection === "function") cancelActionSelection();
     return;
   }
-  
+
   // Check if physics attack is in progress
   if (typeof physicsAttackSystem !== 'undefined' && physicsAttackSystem && physicsAttackSystem.isDrawingAttack) {
     // Physics attack will handle the action
     return;
   }
-  
+
   // Basis validatie (is target adjacent & opponent?)
   const attacker = gameState.selectedPawn;
   const dx = Math.abs(attacker.gridX - targetPawn.gridX);
@@ -2131,29 +2196,29 @@ function handleMoveAction(pawn, targetGridX, targetGridY) {
     // In test mode, skip server communication
     if (gameState.testMode) {
       console.log("Test mode: Skipping server communication");
-      
+
       // Simulate server response after animation
       setTimeout(() => {
         // Update pawn position
         pawn.gridX = targetGridX;
         pawn.gridY = targetGridY;
         pawn.remainingStamina = Math.max(0, (pawn.remainingStamina || 0) - 1);
-        
+
         // In test mode, reset stamina if it reaches 0
         if (pawn.remainingStamina <= 0) {
           pawn.remainingStamina = pawn.linkedCard?.stamina || 5;
         }
-        
+
         // Update UI
         if (typeof pawn.updateBars === "function") {
           pawn.updateBars();
         }
-        
+
         // Reset phase for continued testing
         gameState.currentPhase = "ACTION";
         gameState.selectedPawn = null;
         if (typeof updateActionUI === "function") updateActionUI(null);
-        
+
         // Check win conditions
         if (typeof checkWinCondition === "function") {
           checkWinCondition();
@@ -2240,7 +2305,7 @@ function handleAttackAction(attackerPawn, defenderPawn) {
   if (isLocalPlayerAction) {
     if (typeof soundManager !== "undefined") soundManager.playSound("attack");
     if (typeof clearHighlights === "function") clearHighlights();
-    
+
     // Add screen shake for impact
     if (app && app.stage) {
       const originalX = app.stage.x;
@@ -2253,9 +2318,9 @@ function handleAttackAction(attackerPawn, defenderPawn) {
           yoyo: true,
           repeat: 3,
           ease: "power2.out",
-          onComplete: () => { 
-            app.stage.x = originalX; 
-            app.stage.y = originalY; 
+          onComplete: () => {
+            app.stage.x = originalX;
+            app.stage.y = originalY;
           }
         });
       }
@@ -2270,36 +2335,36 @@ function handleAttackAction(attackerPawn, defenderPawn) {
     // In test mode, simulate attack locally
     if (gameState.testMode) {
       console.log("Test mode: Simulating attack locally");
-      
+
       // Calculate damage
       const attackPower = attackerPawn.linkedCard.attack || 0;
       const defenderHP = defenderPawn.currentHP || defenderPawn.linkedCard?.hp || 0;
       const counterAttack = defenderPawn.linkedCard?.attack || 0;
-      
+
       // Simulate attack results
       setTimeout(() => {
         // Apply damage to defender
         defenderPawn.currentHP = Math.max(0, defenderHP - attackPower);
-        
+
         // Apply counter damage to attacker if defender survives
         if (defenderPawn.currentHP > 0 && counterAttack > 0) {
           const attackerHP = attackerPawn.currentHP || attackerPawn.linkedCard?.hp || 0;
           attackerPawn.currentHP = Math.max(0, attackerHP - counterAttack);
         }
-        
+
         // Handle elimination
         if (defenderPawn.currentHP <= 0) {
           // Move attacker to defender position
           const targetX = defenderPawn.gridX;
           const targetY = defenderPawn.gridY;
-          
+
           // Destroy defender
           defenderPawn.destroyVisual();
           const defenderIndex = gameState.players[defenderPawn.player].pawns.indexOf(defenderPawn);
           if (defenderIndex > -1) {
             gameState.players[defenderPawn.player].pawns.splice(defenderIndex, 1);
           }
-          
+
           // Move attacker
           if (typeof attackerPawn.animateMoveTo === "function") {
             attackerPawn.animateMoveTo(targetX, targetY, () => {
@@ -2308,7 +2373,7 @@ function handleAttackAction(attackerPawn, defenderPawn) {
             });
           }
         }
-        
+
         // Handle attacker elimination
         if (attackerPawn.currentHP <= 0) {
           attackerPawn.destroyVisual();
@@ -2317,24 +2382,24 @@ function handleAttackAction(attackerPawn, defenderPawn) {
             gameState.players[attackerPawn.player].pawns.splice(attackerIndex, 1);
           }
         }
-        
+
         // Update UI
         if (attackerPawn.currentHP > 0) {
           attackerPawn.updateStatsDisplay(attackerPawn.linkedCard, attackerPawn.currentHP);
           attackerPawn.updateBars();
           attackerPawn.hasActedThisCycle = true;
         }
-        
+
         if (defenderPawn.currentHP > 0) {
           defenderPawn.updateStatsDisplay(defenderPawn.linkedCard, defenderPawn.currentHP);
           defenderPawn.updateBars();
         }
-        
+
         // Reset phase for continued testing
         gameState.currentPhase = "ACTION";
         gameState.selectedPawn = null;
         if (typeof updateActionUI === "function") updateActionUI(null);
-        
+
         // Check win conditions
         if (typeof checkWinCondition === "function") {
           checkWinCondition();
@@ -2500,6 +2565,7 @@ function checkWinCondition() {
       `!!! GAME OVER DETECTED (Client Side) - Winner: ${winner === 0 ? "DRAW" : "Player " + winner
       }, Reason: ${reason} !!!`
     );
+    try { if (window.SpLogger) SpLogger.log("game.over.client", { winner, reason, cycle: gameState.cycleNumber, round: gameState.roundNumber }); } catch (_) { }
     gameState.winner = winner;
     gameState.currentPhase = "GAME_OVER";
     if (typeof updateGameStatusUI === "function") updateGameStatusUI();
@@ -2559,8 +2625,8 @@ function handleCardDefinition() {
 
         // ⏳ Auto-submit or disable after 40 seconds
         TimerManager.start(40, () => {
-            showToast("⏳ Time's up! Auto-submitting cards.");
-            handleConfirmCards();
+          showToast("⏳ Time's up! Auto-submitting cards.");
+          handleConfirmCards();
         });
       } else console.error("Confirm button missing!");
     } else {
@@ -2641,7 +2707,7 @@ function handleConfirmCards() {
       hasGameSession: typeof gameSession !== "undefined",
       gameSession: gameSession,
     });
-    
+
     if (typeof socket !== "undefined" && typeof gameSession !== "undefined") {
       // Play confirmation sound
       if (typeof soundManager !== "undefined") {
@@ -2707,10 +2773,10 @@ function handlePlayerTurn() {
 
       // ⏳ Auto-end turn after 40 seconds if no action
       TimerManager.start(40, () => {
-          showToast("⏳ Time's up! Ending turn.");
-          if (typeof window.endTurn === "function") {
-              window.endTurn();
-          }
+        showToast("⏳ Time's up! Ending turn.");
+        if (typeof window.endTurn === "function") {
+          window.endTurn();
+        }
       });
     } else {
       // Player has active, unacted pawns, but NONE of them can move or attack
@@ -2869,7 +2935,7 @@ function showMovementOptionsPreview(pawn) {
       .drawRect(0, 0, CELL_SIZE, CELL_SIZE)
       .endFill();
     hl.position.set(p.x, p.y);
-    
+
     // Add stamina cost text for preview as well
     if (m.staminaCost !== undefined) {
       const staminaText = new PIXI.Text(m.staminaCost.toString(), {
@@ -2885,7 +2951,7 @@ function showMovementOptionsPreview(pawn) {
       staminaText.alpha = 0.8; // Semi-transparent
       hl.addChild(staminaText);
     }
-    
+
     previewHighlightContainer.addChild(hl);
   });
 }
