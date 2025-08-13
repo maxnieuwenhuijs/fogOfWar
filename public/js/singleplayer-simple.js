@@ -912,8 +912,19 @@
   }
 
   // --- Entry point ---
-  window.initSimpleSingleplayer = function () {
+  window.initSimpleSingleplayer = async function () {
     console.log(SP_LOG_PREFIX, "Initializing singleplayer...");
+    
+    // Load assets first to ensure pawn textures are available
+    console.log(SP_LOG_PREFIX, "Loading game assets...");
+    const assetsLoaded = await loadGameAssets();
+    if (!assetsLoaded) {
+      console.error(SP_LOG_PREFIX, "Failed to load assets for singleplayer");
+      alert("Failed to load game assets. Please refresh and try again.");
+      return;
+    }
+    console.log(SP_LOG_PREFIX, "Assets loaded successfully");
+    
     // Mark mode
     gameState.singleplayerMode = true;
     try { if (window.SpLogger) SpLogger.log("session.start", { mode: "singleplayer" }); } catch (_) { }

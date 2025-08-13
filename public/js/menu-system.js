@@ -96,7 +96,7 @@ class MenuSystem {
             </div>
         `;
 
-        const startWithDifficulty = (level) => {
+        const startWithDifficulty = async (level) => {
             localStorage.setItem('sp_difficulty', level);
             try { if (window.SpLogger) SpLogger.setDifficulty(level); } catch (_) { }
             try {
@@ -106,7 +106,7 @@ class MenuSystem {
 
                 this.menuContainer.style.display = 'none';
                 if (typeof window.initSimpleSingleplayer === 'function') {
-                    window.initSimpleSingleplayer();
+                    await window.initSimpleSingleplayer();
                 } else {
                     alert('Singleplayer module missing.');
                     this.showMainMenu();

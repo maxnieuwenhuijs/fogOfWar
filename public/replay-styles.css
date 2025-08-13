@@ -1,0 +1,83 @@
+/* Replay Request UI Styles */
+#replay-request-ui {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
+  border: 3px solid #ffd700;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+  animation: fadeIn 0.3s ease-in;
+}
+
+.replay-request-container {
+  text-align: center;
+  color: #fff;
+}
+
+.replay-request-container h3 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#replay-request-message {
+  font-size: 18px;
+  margin-bottom: 25px;
+}
+
+#requesting-player {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.replay-request-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.replay-request-actions button {
+  padding: 12px 30px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid #ffd700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.replay-request-actions .primary {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+}
+
+.replay-request-actions .primary:hover {
+  background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+  transform: scale(1.05);
+}
+
+.replay-request-actions .secondary {
+  background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+  color: white;
+}
+
+.replay-request-actions .secondary:hover {
+  background: linear-gradient(135deg, #da190b 0%, #f44336 100%);
+  transform: scale(1.05);
+}
+
+#replay-waiting-message {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #ffd700;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

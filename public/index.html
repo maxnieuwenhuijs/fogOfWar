@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fog of War - Multiplayer</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="replay-styles.css" />
   <!-- Inline styles hier zijn alleen voor referentie, ze moeten in style.css -->
   <style>
     /* Inline CSS hier is NIET AANBEVOLEN - Zet dit in style.css */
@@ -420,9 +421,22 @@
               <div class="firework" id="firework3"></div>
             </div>
             <div class="victory-actions">
-              <button id="sp-replay-btn" class="menu-button primary">Replay (Singleplayer)</button>
+              <button id="replay-btn" class="menu-button primary">Play Again</button>
               <button id="back-to-menu-btn" class="menu-button">Back to Menu</button>
             </div>
+          </div>
+        </div>
+        
+        <!-- Replay Request UI (Multiplayer) -->
+        <div id="replay-request-ui" style="display: none;">
+          <div class="replay-request-container">
+            <h3>⚔️ Rematch Request</h3>
+            <p id="replay-request-message">Player <span id="requesting-player">?</span> wants to play again!</p>
+            <div class="replay-request-actions">
+              <button id="accept-replay-btn" class="menu-button primary">Accept</button>
+              <button id="deny-replay-btn" class="menu-button secondary">Deny</button>
+            </div>
+            <p id="replay-waiting-message" style="display: none;">Waiting for opponent's response...</p>
           </div>
         </div>
       </div>
@@ -488,27 +502,136 @@
   <script>
     // Wire victory actions when DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
-      const replayBtn = document.getElementById('sp-replay-btn');
+      const replayBtn = document.getElementById('replay-btn');
       const backBtn = document.getElementById('back-to-menu-btn');
+      const replayRequestUI = document.getElementById('replay-request-ui');
+      const acceptReplayBtn = document.getElementById('accept-replay-btn');
+      const denyReplayBtn = document.getElementById('deny-replay-btn');
+      const replayWaitingMsg = document.getElementById('replay-waiting-message');
+      const replayRequestActions = document.querySelector('.replay-request-actions');
+      
       if (replayBtn) {
-        replayBtn.addEventListener('click', function () {
+        replayBtn.addEventListener('click', async function () {
           try {
-            // Only for singleplayer
-            if (typeof initSimpleSingleplayer === 'function') {
+            // Check if singleplayer or multiplayer
+            if (gameState && gameState.singleplayerMode) {
+              // Singleplayer: restart immediately
               document.getElementById('game-over').style.display = 'none';
-              initSimpleSingleplayer();
+              if (typeof initSimpleSingleplayer === 'function') {
+                await initSimpleSingleplayer();
+              }
+            } else {
+              // Multiplayer: send replay request
+              if (socket && gameSession && gameSession.roomCode) {
+                socket.emit('replayRequest', { 
+                  roomCode: gameSession.roomCode,
+                  playerNum: gameState.playerNumber 
+                });
+                // Show waiting message in victory screen
+                replayBtn.disabled = true;
+                replayBtn.textContent = 'Waiting for opponent...';
+              }
             }
-          } catch (e) { console.warn('Replay failed', e); }
+          } catch (e) { 
+            console.error('Replay failed', e); 
+          }
         });
       }
+      
       if (backBtn) {
         backBtn.addEventListener('click', function () {
           try {
             document.getElementById('game-over').style.display = 'none';
+            if (replayRequestUI) replayRequestUI.style.display = 'none';
+            
+            // For multiplayer, disconnect from room
+            if (socket && gameSession && gameSession.roomCode && !gameState.singleplayerMode) {
+              socket.emit('leaveRoom', { roomCode: gameSession.roomCode });
+            }
+            
+            // Go back to menu
             if (typeof menuSystem !== 'undefined' && typeof menuSystem.showMainMenu === 'function') {
               menuSystem.showMainMenu();
             }
-          } catch (e) { console.warn('Back to menu failed', e); }
+          } catch (e) { 
+            console.warn('Back to menu failed', e); 
+          }
+        });
+      }
+      
+      // Handle replay request acceptance
+      if (acceptReplayBtn) {
+        acceptReplayBtn.addEventListener('click', function () {
+          if (socket && gameSession && gameSession.roomCode) {
+            socket.emit('replayResponse', { 
+              roomCode: gameSession.roomCode,
+              accepted: true,
+              playerNum: gameState.playerNumber
+            });
+            // Hide the request UI
+            if (replayRequestUI) replayRequestUI.style.display = 'none';
+          }
+        });
+      }
+      
+      // Handle replay request denial
+      if (denyReplayBtn) {
+        denyReplayBtn.addEventListener('click', function () {
+          if (socket && gameSession && gameSession.roomCode) {
+            socket.emit('replayResponse', { 
+              roomCode: gameSession.roomCode,
+              accepted: false,
+              playerNum: gameState.playerNumber
+            });
+            // Hide the request UI
+            if (replayRequestUI) replayRequestUI.style.display = 'none';
+          }
+        });
+      }
+      
+      // Socket event handlers for replay system
+      if (typeof socket !== 'undefined') {
+        // When receiving a replay request from opponent
+        socket.on('replayRequestReceived', function(data) {
+          const requestingPlayer = data.playerNum;
+          const requestingPlayerSpan = document.getElementById('requesting-player');
+          if (requestingPlayerSpan) {
+            requestingPlayerSpan.textContent = requestingPlayer;
+          }
+          // Show the replay request UI
+          if (replayRequestUI) {
+            replayRequestUI.style.display = 'block';
+            // Make sure buttons are visible and waiting message is hidden
+            if (replayRequestActions) replayRequestActions.style.display = 'flex';
+            if (replayWaitingMsg) replayWaitingMsg.style.display = 'none';
+          }
+        });
+        
+        // When both players agreed to replay
+        socket.on('replayAccepted', function() {
+          console.log('Both players agreed to replay!');
+          // Hide all UI elements
+          document.getElementById('game-over').style.display = 'none';
+          if (replayRequestUI) replayRequestUI.style.display = 'none';
+          // The server will emit a new gameStart event
+        });
+        
+        // When replay was denied
+        socket.on('replayDenied', function(data) {
+          const deniedBy = data.deniedBy;
+          // Show message and go back to menu
+          alert(`Player ${deniedBy} declined the rematch request.`);
+          document.getElementById('game-over').style.display = 'none';
+          if (replayRequestUI) replayRequestUI.style.display = 'none';
+          
+          // Disconnect and go to menu
+          if (socket && gameSession && gameSession.roomCode) {
+            socket.emit('leaveRoom', { roomCode: gameSession.roomCode });
+          }
+          
+          if (typeof menuSystem !== 'undefined' && typeof menuSystem.showMainMenu === 'function') {
+            menuSystem.showMainMenu();
+          }
         });
       }
     });

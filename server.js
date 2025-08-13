@@ -1602,6 +1602,194 @@ io.on("connection", (socket) => {
     io.to(roomCode).emit("newMessage", messageData);
   });
 
+  // Handle replay request
+  socket.on("replayRequest", ({ roomCode, playerNum }) => {
+    const room = gameRooms.get(roomCode);
+    if (!room) {
+      console.log(`Replay request for non-existent room: ${roomCode}`);
+      return;
+    }
+
+    // Store the replay request
+    if (!room.replayRequests) {
+      room.replayRequests = {};
+    }
+    room.replayRequests[playerNum] = true;
+
+    // Notify the other player
+    const otherPlayer = playerNum === PLAYER_1 ? room.player2 : room.player1;
+    if (otherPlayer) {
+      io.to(otherPlayer.id).emit("replayRequestReceived", { playerNum });
+    }
+
+    console.log(`Player ${playerNum} requested replay in room ${roomCode}`);
+  });
+
+  // Handle replay response
+  socket.on("replayResponse", ({ roomCode, accepted, playerNum }) => {
+    const room = gameRooms.get(roomCode);
+    if (!room) {
+      console.log(`Replay response for non-existent room: ${roomCode}`);
+      return;
+    }
+
+    const requestingPlayer = playerNum === PLAYER_1 ? PLAYER_2 : PLAYER_1;
+    
+    if (accepted) {
+      // Check if both players want to replay
+      if (room.replayRequests && room.replayRequests[requestingPlayer]) {
+        console.log(`Both players agreed to replay in room ${roomCode}`);
+        
+        // Reset the game state
+        room.gameState = {
+          cycleNumber: 1,
+          roundNumber: 1,
+          currentPhase: "SETUP_1_DEFINE",
+          currentPlayer: PLAYER_1,
+          players: {
+            [PLAYER_1]: {
+              pawns: initializePawns(PLAYER_1),
+              cardsPlayed: [],
+              cardsAvailableForLinking: [],
+              totalHP: 0,
+              totalAttack: 0,
+              totalStamina: 0,
+            },
+            [PLAYER_2]: {
+              pawns: initializePawns(PLAYER_2),
+              cardsPlayed: [],
+              cardsAvailableForLinking: [],
+              totalHP: 0,
+              totalAttack: 0,
+              totalStamina: 0,
+            },
+          },
+          cycleInitiativePlayer: null,
+          hasPlayer1ActedInAction: false,
+          hasPlayer2ActedInAction: false,
+          bothPlayersReady: false,
+        };
+
+        // Clear replay requests
+        room.replayRequests = {};
+
+        // Notify both players that the game is restarting
+        io.to(roomCode).emit("replayAccepted");
+        
+        // Start a new game
+        setTimeout(() => {
+          io.to(roomCode).emit("gameStart", {
+            currentPhase: room.gameState.currentPhase,
+            cycleNumber: room.gameState.cycleNumber,
+            roundNumber: room.gameState.roundNumber,
+            currentPlayer: room.gameState.currentPlayer,
+          });
+          console.log(`New game started in room ${roomCode} after replay`);
+        }, 1000);
+      } else {
+        // The responding player accepted, but they didn't request a replay themselves
+        // Store their acceptance
+        if (!room.replayRequests) {
+          room.replayRequests = {};
+        }
+        room.replayRequests[playerNum] = true;
+        
+        // Check if both have now requested
+        if (room.replayRequests[PLAYER_1] && room.replayRequests[PLAYER_2]) {
+          console.log(`Both players agreed to replay in room ${roomCode}`);
+          
+          // Reset the game state
+          room.gameState = {
+            cycleNumber: 1,
+            roundNumber: 1,
+            currentPhase: "SETUP_1_DEFINE",
+            currentPlayer: PLAYER_1,
+            players: {
+              [PLAYER_1]: {
+                pawns: initializePawns(PLAYER_1),
+                cardsPlayed: [],
+                cardsAvailableForLinking: [],
+                totalHP: 0,
+                totalAttack: 0,
+                totalStamina: 0,
+              },
+              [PLAYER_2]: {
+                pawns: initializePawns(PLAYER_2),
+                cardsPlayed: [],
+                cardsAvailableForLinking: [],
+                totalHP: 0,
+                totalAttack: 0,
+                totalStamina: 0,
+              },
+            },
+            cycleInitiativePlayer: null,
+            hasPlayer1ActedInAction: false,
+            hasPlayer2ActedInAction: false,
+            bothPlayersReady: false,
+          };
+
+          // Clear replay requests
+          room.replayRequests = {};
+
+          // Notify both players that the game is restarting
+          io.to(roomCode).emit("replayAccepted");
+          
+          // Start a new game
+          setTimeout(() => {
+            io.to(roomCode).emit("gameStart", {
+              currentPhase: room.gameState.currentPhase,
+              cycleNumber: room.gameState.cycleNumber,
+              roundNumber: room.gameState.roundNumber,
+              currentPlayer: room.gameState.currentPlayer,
+            });
+            console.log(`New game started in room ${roomCode} after replay`);
+          }, 1000);
+        }
+      }
+    } else {
+      // Player denied the replay request
+      console.log(`Player ${playerNum} denied replay in room ${roomCode}`);
+      
+      // Clear replay requests
+      room.replayRequests = {};
+      
+      // Notify both players
+      io.to(roomCode).emit("replayDenied", { deniedBy: playerNum });
+    }
+  });
+
+  // Handle leave room (for clean exit)
+  socket.on("leaveRoom", ({ roomCode }) => {
+    const room = gameRooms.get(roomCode);
+    if (!room) return;
+
+    // Find which player is leaving
+    let leavingPlayerNum = null;
+    if (room.player1 && room.player1.id === socket.id) {
+      leavingPlayerNum = PLAYER_1;
+    } else if (room.player2 && room.player2.id === socket.id) {
+      leavingPlayerNum = PLAYER_2;
+    }
+
+    if (leavingPlayerNum) {
+      console.log(`Player ${leavingPlayerNum} left room ${roomCode}`);
+      socket.leave(roomCode);
+      
+      // Remove the room if it's empty or notify the other player
+      if (room.player1?.id === socket.id) {
+        room.player1 = null;
+      } else if (room.player2?.id === socket.id) {
+        room.player2 = null;
+      }
+
+      // If both players left, delete the room
+      if (!room.player1 && !room.player2) {
+        gameRooms.delete(roomCode);
+        console.log(`Room ${roomCode} deleted - both players left`);
+      }
+    }
+  });
+
   // Handle client disconnection
   socket.on("disconnect", () => {
     console.log(`Client disconnected: ${socket.id}`);

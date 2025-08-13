@@ -59,16 +59,57 @@ class Pawn {
       try {
         const path = this.player === PLAYER_1 ? 'assets/images/p1_piece.png' : 'assets/images/p2_piece.png';
         texture = PIXI.Texture.from(path);
+        // Store it for future use if it loaded successfully
+        if (texture && texture.valid && texture.width > 0) {
+          ICON_TEXTURES[textureAlias] = texture;
+        } else {
+          // If texture isn't valid yet, wait for it to load
+          texture.on('update', () => {
+            if (texture.valid && texture.width > 0) {
+              ICON_TEXTURES[textureAlias] = texture;
+              // Update the sprite if it was created with a placeholder
+              if (this.graphics && this.graphics instanceof PIXI.Sprite) {
+                this.graphics.texture = texture;
+                const spriteScale = (CELL_SIZE * 0.8) / Math.max(texture.width, texture.height);
+                this.graphics.scale.set(spriteScale);
+              }
+            }
+          });
+        }
       } catch (_) { /* ignore */ }
     }
-    if (!texture) {
-      console.warn(`Texture missing for ${textureAlias}. Rendering colored circle fallback.`);
+    if (!texture || !texture.valid || texture.width === 0) {
+      console.warn(`Texture not ready for ${textureAlias}. Rendering colored circle fallback.`);
       this.graphics = new PIXI.Graphics();
       const color = this.player === PLAYER_1 ? COLORS.player1 : COLORS.player2;
       this.graphics.beginFill(color);
       this.graphics.lineStyle(1, 0x000000, 0.3);
       this.graphics.drawCircle(0, 0, radius);
       this.graphics.endFill();
+      
+      // Try to load the texture asynchronously and replace the circle when ready
+      const asyncPath = this.player === PLAYER_1 ? 'assets/images/p1_piece.png' : 'assets/images/p2_piece.png';
+      PIXI.Assets.load(asyncPath).then((loadedTexture) => {
+        if (loadedTexture && loadedTexture.valid) {
+          // Store the texture for future use
+          ICON_TEXTURES[textureAlias] = loadedTexture;
+          
+          // Replace the graphics with a sprite
+          const index = this.pixiObject.getChildIndex(this.graphics);
+          this.pixiObject.removeChild(this.graphics);
+          
+          this.graphics = new PIXI.Sprite(loadedTexture);
+          this.graphics.anchor.set(0.5);
+          const spriteScale = (CELL_SIZE * 0.8) / Math.max(loadedTexture.width, loadedTexture.height);
+          this.graphics.scale.set(spriteScale);
+          
+          // Add at the same position in the hierarchy
+          this.pixiObject.addChildAt(this.graphics, index);
+          console.log(`Successfully loaded and replaced texture for ${textureAlias}`);
+        }
+      }).catch((err) => {
+        console.error(`Failed to load texture for ${textureAlias}:`, err);
+      });
     } else {
       this.graphics = new PIXI.Sprite(texture);
       this.graphics.anchor.set(0.5);
