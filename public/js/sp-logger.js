@@ -97,33 +97,47 @@
         }
 
         flush(sync = false) {
-            if (this.isFlushing || this.queue.length === 0) return;
+            if (this.isFlushing || this.queue.length === 0) {
+                return;
+            }
             const events = this.queue.splice(0, this.queue.length);
             const payload = { sessionId: this.sessionId, events };
 
+            // Determine remote endpoint. If none configured, skip network calls entirely.
+            let endpoint = null;
             try {
-                if (sync && navigator.sendBeacon) {
+                endpoint = (typeof window !== 'undefined' && window.SP_LOG_ENDPOINT) || localStorage.getItem('sp_log_endpoint') || null;
+                if (endpoint && typeof endpoint === 'string' && endpoint.trim().length === 0) endpoint = null;
+            } catch (_) { endpoint = null; }
+
+            try {
+                if (endpoint && sync && navigator.sendBeacon) {
                     const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
-                    navigator.sendBeacon("/api/sp-log", blob);
+                    navigator.sendBeacon(endpoint, blob);
                     this._persistEventsToIndexedDb(events);
                     return;
                 }
             } catch (_) { }
 
-            this.isFlushing = true;
-            fetch("/api/sp-log", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-                keepalive: true,
-            })
-                .catch(() => { })
-                .finally(() => {
-                    this.isFlushing = false;
-                });
+            if (endpoint) {
+                this.isFlushing = true;
+                fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                    keepalive: true,
+                })
+                    .catch((e) => { console.warn('SP log POST failed', e); })
+                    .finally(() => {
+                        this.isFlushing = false;
+                    });
+            } else {
+                // If no endpoint set, still persist locally
+                try { this._persistEventsToIndexedDb(events); } catch (_) {}
+            }
 
-            // Best-effort local persistence
-            this._persistEventsToIndexedDb(events);
+            // Best-effort local persistence (always)
+            try { this._persistEventsToIndexedDb(events); } catch (_) {}
         }
 
         // --- IndexedDB Layer ---

@@ -366,6 +366,8 @@ function updateGameStatusUI() {
         }
       }
       gameOverDiv.style.display = "block";
+      // On mobile, also surface the card panel as a summary if available
+      try { if (window.MobileUI && window.MobileUI.setDrawerOpen) { window.MobileUI.setDrawerOpen(true); } } catch (_) {}
     }
     // Verberg andere panelen (zowel kaart als actie)
     if (cardDefinitionUI) cardDefinitionUI.style.display = "none";

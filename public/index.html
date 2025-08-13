@@ -419,6 +419,10 @@
               <div class="firework" id="firework2"></div>
               <div class="firework" id="firework3"></div>
             </div>
+            <div class="victory-actions">
+              <button id="sp-replay-btn" class="menu-button primary">Replay (Singleplayer)</button>
+              <button id="back-to-menu-btn" class="menu-button">Back to Menu</button>
+            </div>
           </div>
         </div>
       </div>
@@ -440,7 +444,7 @@
   <!-- Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  
   <!-- <script src="/socket.io/socket.io.js"></script> -->
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"
     integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
@@ -462,12 +466,14 @@
   <script src="js/game-classes.js"></script>
   <script src="js/sp-logger.js"></script>
   <script>
+    // Enable singleplayer server logging to this app's endpoint
+    window.SP_LOG_ENDPOINT = '/api/sp-log';
+  </script>
+  <script>
     // Default difficulty can be overridden later from menu
     try { if (window.SpLogger) SpLogger.setDifficulty(localStorage.getItem('sp_difficulty') || 'easy'); } catch (_) { }
   </script>
-  <script src="js/physics-attack-v2.js"></script>
-  <!-- Removed test/instructions panels in singleplayer build -->
-  <script src="js/physics-attack-sync.js"></script>
+  <!-- Physics attack scripts removed -->
   <script src="js/sound-manager.js"></script>
   <script src="js/loading-screen.js"></script>
   <script src="js/menu-system.js"></script>
@@ -478,6 +484,35 @@
   <script src="js/singleplayer-simple.js"></script>
   <script src="js/main.js"></script>
   <script src="js/mobile-ui.js"></script>
+
+  <script>
+    // Wire victory actions when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+      const replayBtn = document.getElementById('sp-replay-btn');
+      const backBtn = document.getElementById('back-to-menu-btn');
+      if (replayBtn) {
+        replayBtn.addEventListener('click', function () {
+          try {
+            // Only for singleplayer
+            if (typeof initSimpleSingleplayer === 'function') {
+              document.getElementById('game-over').style.display = 'none';
+              initSimpleSingleplayer();
+            }
+          } catch (e) { console.warn('Replay failed', e); }
+        });
+      }
+      if (backBtn) {
+        backBtn.addEventListener('click', function () {
+          try {
+            document.getElementById('game-over').style.display = 'none';
+            if (typeof menuSystem !== 'undefined' && typeof menuSystem.showMainMenu === 'function') {
+              menuSystem.showMainMenu();
+            }
+          } catch (e) { console.warn('Back to menu failed', e); }
+        });
+      }
+    });
+  </script>
 
   <!-- Copy to Clipboard Functie -->
   <script>

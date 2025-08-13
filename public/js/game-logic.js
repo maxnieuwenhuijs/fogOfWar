@@ -593,6 +593,8 @@ function initializeGameSocketEvents() {
     setTimeout(() => {
       if (typeof handleCardDefinition === "function") handleCardDefinition();
       else console.error("handleCardDefinition missing!");
+      // Auto-open the drawer on mobile for DEFINE phase
+      try { if (window.MobileUI && window.MobileUI.setDrawerOpen) { window.MobileUI.setDrawerOpen(true); } } catch (_) {}
     }, 50);
   });
   socket.on("cardsRevealed", (data) => {
@@ -2136,11 +2138,7 @@ function onAttackTargetClick(targetPawn) {
     return;
   }
 
-  // Check if physics attack is in progress
-  if (typeof physicsAttackSystem !== 'undefined' && physicsAttackSystem && physicsAttackSystem.isDrawingAttack) {
-    // Physics attack will handle the action
-    return;
-  }
+  // Physics attack integration removed
 
   // Basis validatie (is target adjacent & opponent?)
   const attacker = gameState.selectedPawn;

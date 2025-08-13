@@ -10,7 +10,10 @@ let app;
 let highlightContainer; // Ook globaal maken of doorgeven indien nodig
 
 // Global object to store loaded icon textures (keyed by alias like "icon_1_1_5")
-const ICON_TEXTURES = {};
+// IMPORTANT: Reuse a single global so assets loaded by other modules (e.g., loading-screen)
+// are not lost when this file evaluates. Never overwrite if it already exists.
+window.ICON_TEXTURES = window.ICON_TEXTURES || {};
+const ICON_TEXTURES = window.ICON_TEXTURES;
 
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('Main.js loaded - DOM fully parsed.');
@@ -125,15 +128,17 @@ async function loadGameAssets() {
             console.log(`Attempting to load ${assetsToLoad.length} assets...`);
         }
 
-        // Use PIXI.Assets to load
-        const loadedTextures = await PIXI.Assets.load(assetsToLoad);
-
-        // Store the loaded textures globally using their alias as the key
+        // Load assets one-by-one to ensure alias mapping is correct across PIXI versions
         for (const asset of assetsToLoad) {
-            if (loadedTextures[asset.alias]) {
-                ICON_TEXTURES[asset.alias] = loadedTextures[asset.alias];
-            } else {
-                console.warn(`Texture for alias ${asset.alias} (Path: ${asset.src}) not found after loading.`);
+            try {
+                const tex = await PIXI.Assets.load({ alias: asset.alias, src: asset.src });
+                if (tex) {
+                    ICON_TEXTURES[asset.alias] = tex;
+                } else {
+                    console.warn(`Texture load returned null for ${asset.alias} (${asset.src})`);
+                }
+            } catch (e) {
+                console.warn(`Failed to load texture ${asset.alias} (${asset.src})`, e);
             }
         }
 
@@ -439,16 +444,7 @@ async function initGame() {
         resizeCanvas('init');
         try { if (window.SpLogger) SpLogger.log('canvas.resize.ui', { reason: 'init' }); } catch (_) { }
 
-        // Physics attack system is auto-initialized in physics-attack-v2.js
-
-        // Add mouse drag event handlers for physics-based attacks
-        app.stage.on('pointermove', (event) => {
-            if (app.stage.isDraggingAttack && physicsAttackSystem) {
-                const globalPos = event.global;
-                const stagePos = globalToStageCoords(globalPos.x, globalPos.y);
-                physicsAttackSystem.updateDrag(stagePos.x, stagePos.y);
-            }
-        });
+        // Physics-based drag removed
 
         // Ensure pointer mapping stays accurate when layout changes
         const ro = new ResizeObserver(() => resizeCanvas('observer'));
@@ -471,16 +467,7 @@ async function initGame() {
             window.addEventListener('pointerdown', logHitTest, { passive: true });
         } catch (_) { }
 
-        app.stage.on('pointerup', (event) => {
-            if (app.stage.isDraggingAttack && physicsAttackSystem) {
-                app.stage.isDraggingAttack = false;
-
-                // The target pawn was already set when we started dragging
-                physicsAttackSystem.endDrag();
-                app.stage.dragStartPawn = null;
-                app.stage.dragTargetPawn = null;
-            }
-        });
+        // Physics-based drag removed
 
     } catch (error) {
         console.error("Error initializing PixiJS:", error);

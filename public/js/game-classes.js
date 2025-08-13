@@ -53,9 +53,16 @@ class Pawn {
 
     // --- Main Pawn Sprite ---
     const textureAlias = this.player === PLAYER_1 ? 'p1_piece' : 'p2_piece';
-    const texture = ICON_TEXTURES[textureAlias];
+    let texture = ICON_TEXTURES && ICON_TEXTURES[textureAlias];
     if (!texture) {
-      console.error(`!!! Texture not found for pawn: ${textureAlias}. Falling back to circle.`);
+      // Best-effort on-demand load using a direct path (works even if preloader skipped)
+      try {
+        const path = this.player === PLAYER_1 ? 'assets/images/p1_piece.png' : 'assets/images/p2_piece.png';
+        texture = PIXI.Texture.from(path);
+      } catch (_) { /* ignore */ }
+    }
+    if (!texture) {
+      console.warn(`Texture missing for ${textureAlias}. Rendering colored circle fallback.`);
       this.graphics = new PIXI.Graphics();
       const color = this.player === PLAYER_1 ? COLORS.player1 : COLORS.player2;
       this.graphics.beginFill(color);
@@ -178,55 +185,7 @@ class Pawn {
       if (gameState.isAnimating || gameState.currentPhase === "GAME_OVER") return;
       event.stopPropagation();
 
-      // Handle physics attack dragging when clicking on ENEMY pawn
-      if (gameState.currentPhase === "AWAITING_ACTION_TARGET" &&
-        gameState.selectedPawn &&
-        gameState.selectedPawn.player === gameState.playerNumber &&
-        this.player !== gameState.playerNumber && // This is an enemy pawn
-        typeof physicsAttackSystem !== 'undefined' &&
-        physicsAttackSystem) {
-
-        // Check if this enemy is a valid target for the selected pawn
-        const selectedPawn = gameState.selectedPawn;
-        const targets = getAttackTargets(selectedPawn);
-        const isValidTarget = targets.some(t => t.id === this.id);
-
-        if (isValidTarget) {
-          console.log("Physics attack: Starting drag from enemy pawn:", this.id);
-          console.log("Selected pawn:", selectedPawn.id);
-
-          const globalPos = event.global;
-          const stagePos = globalToStageCoords(globalPos.x, globalPos.y);
-
-          // Test: Create a simple red circle at click position to verify graphics work
-          const testGraphics = new PIXI.Graphics();
-          testGraphics.beginFill(0xFF0000, 1);
-          testGraphics.drawCircle(stagePos.x, stagePos.y, 10);
-          testGraphics.endFill();
-          app.stage.addChild(testGraphics);
-          console.log("TEST: Created red circle at stage coords", stagePos.x, stagePos.y);
-          setTimeout(() => {
-            if (testGraphics && !testGraphics.destroyed) {
-              app.stage.removeChild(testGraphics);
-              testGraphics.destroy();
-            }
-          }, 2000);
-
-          // Start drag from enemy position, attacking pawn is the selected one
-          physicsAttackSystem.startDrag(stagePos.x, stagePos.y, selectedPawn, this);
-
-          // Set dragging flag on the stage
-          if (app && app.stage) {
-            app.stage.isDraggingAttack = true;
-            app.stage.dragStartPawn = selectedPawn;
-            app.stage.dragTargetPawn = this;
-          }
-
-          // Prevent normal click handling
-          event.stopPropagation();
-          return;
-        }
-      }
+      // Physics attack drag removed
 
       // Normal pawn click handling
       if (typeof onPawnClick === "function") onPawnClick(this);
@@ -234,9 +193,7 @@ class Pawn {
 
     this.pixiObject.on("pointerover", (event) => {
       if (gameState.isAnimating) return;
-      if (this.player !== gameState.playerNumber && gameState.currentPhase === "AWAITING_ACTION_TARGET") {
-        if (typeof onEnemyPawnHover === "function") onEnemyPawnHover(this);
-      }
+      // Hover logic for physics attack removed
     });
 
     this.pixiObject.on("pointerout", (event) => {
@@ -288,11 +245,20 @@ class Pawn {
       const statKey = `h${card.hp}_s${card.stamina}_a${card.attack}`;
       const iconAlias = STAT_COMBINATION_TO_ICON_ALIAS[statKey];
       if (iconAlias) {
-        const texture = ICON_TEXTURES[iconAlias];
+        let texture = ICON_TEXTURES && ICON_TEXTURES[iconAlias];
+        if (!texture) {
+          try {
+            const path = typeof getCombinationIconPath === 'function' ? getCombinationIconPath(iconAlias) : null;
+            if (path) {
+              texture = PIXI.Texture.from(path);
+              if (texture && ICON_TEXTURES) ICON_TEXTURES[iconAlias] = texture;
+            }
+          } catch (_) { }
+        }
         if (texture) {
           this.combinationIconSprite.texture = texture;
           this.combinationIconSprite.visible = true; // Show combo icon
-          this.combinationIconSprite.alpha = 1; // Set icon opacity to 30% as requested
+          this.combinationIconSprite.alpha = 1;
           // *** KEEP text stats visible ***
           // if(this.hpText) this.hpText.visible = false; // Don't hide
           // if(this.speedText) this.speedText.visible = false; // Don't hide
