@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Fog of War - Mobile Optimized</title>
+  <link rel="stylesheet" href="mobile-style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Mobile Header Bar -->
+  <header class="mobile-header">
+    <button class="header-btn menu-btn" id="menu-toggle">☰</button>
+    <div class="header-title">FOG OF WAR</div>
+    <button class="header-btn info-btn" id="info-toggle">ⓘ</button>
+  </header>
+
+  <!-- Slide-out Menu -->
+  <nav class="slide-menu" id="slide-menu">
+    <div class="menu-header">
+      <h3>Menu</h3>
+      <button class="close-menu" id="close-menu">✕</button>
+    </div>
+    <ul class="menu-items">
+      <li><button class="menu-item" data-action="home">🏠 Home</button></li>
+      <li><button class="menu-item" data-action="settings">⚙️ Settings</button></li>
+      <li><button class="menu-item" data-action="help">❓ Help</button></li>
+      <li><button class="menu-item" data-action="quit">🚪 Quit Game</button></li>
+    </ul>
+  </nav>
+
+  <!-- Game Info Panel (slides from top) -->
+  <div class="info-panel" id="info-panel">
+    <div class="info-content">
+      <div class="stat-row">
+        <span class="stat-label">Phase:</span>
+        <span class="stat-value" id="phase-display">Lobby</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Player:</span>
+        <span class="stat-value" id="player-display">-</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Round:</span>
+        <span class="stat-value" id="round-display">-</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Units:</span>
+        <span class="stat-value">
+          <span class="p1-units">🔴 3</span> / 
+          <span class="p2-units">🔵 3</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    
+    <!-- Lobby Screen -->
+    <section class="screen active" id="lobby-screen">
+      <div class="lobby-container">
+        <div class="logo-section">
+          <h1 class="game-title">FOG OF WAR</h1>
+          <p class="game-subtitle">Strategic Combat</p>
+        </div>
+        
+        <div class="lobby-actions">
+          <button class="primary-btn large-btn" id="create-game-mobile">
+            <span class="btn-icon">⚔️</span>
+            <span class="btn-text">Create Battle</span>
+          </button>
+          
+          <button class="primary-btn large-btn" id="join-game-mobile">
+            <span class="btn-icon">🤝</span>
+            <span class="btn-text">Join Battle</span>
+          </button>
+
+          <button class="secondary-btn large-btn" id="quick-play-mobile">
+            <span class="btn-icon">⚡</span>
+            <span class="btn-text">Quick Play</span>
+          </button>
+        </div>
+
+        <!-- Join Game Input (hidden by default) -->
+        <div class="join-input-section" id="join-input-section" style="display: none;">
+          <input type="text" 
+                 class="room-code-input" 
+                 id="room-code-input" 
+                 placeholder="ROOM CODE" 
+                 maxlength="6"
+                 autocomplete="off"
+                 autocapitalize="characters">
+          <div class="join-actions">
+            <button class="primary-btn" id="confirm-join">Join</button>
+            <button class="secondary-btn" id="cancel-join">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Active Games List -->
+        <div class="active-games-section">
+          <div class="section-header">
+            <h3>Active Battles</h3>
+            <button class="refresh-btn" id="refresh-games">🔄</button>
+          </div>
+          <div class="games-list" id="games-list">
+            <div class="game-item">
+              <span class="game-code">ABCDEF</span>
+              <span class="game-players">1/2 Players</span>
+              <button class="join-btn">Join</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Waiting Screen -->
+    <section class="screen" id="waiting-screen">
+      <div class="waiting-container">
+        <div class="waiting-content">
+          <h2>Waiting for Opponent</h2>
+          <div class="room-code-display">
+            <label>Room Code</label>
+            <div class="code-box">
+              <span id="room-code-display">ABCDEF</span>
+              <button class="copy-btn" id="copy-code">📋</button>
+            </div>
+          </div>
+          <div class="waiting-animation">
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring"></div>
+          </div>
+          <p class="waiting-message">Share this code with your opponent</p>
+          <button class="secondary-btn" id="cancel-waiting">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Game Board Screen -->
+    <section class="screen" id="game-screen">
+      <div class="game-container">
+        
+        <!-- Game Board (PIXI Canvas will be inserted here) -->
+        <div class="board-wrapper" id="board-wrapper">
+          <canvas id="game-canvas"></canvas>
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="action-bar" id="action-bar">
+          <button class="action-btn" id="cards-btn">
+            <span class="btn-icon">🎴</span>
+            <span class="btn-label">Cards</span>
+          </button>
+          <button class="action-btn" id="chat-btn">
+            <span class="btn-icon">💬</span>
+            <span class="btn-label">Chat</span>
+            <span class="notification-badge" style="display: none;">1</span>
+          </button>
+          <button class="action-btn" id="end-turn-btn" disabled>
+            <span class="btn-icon">⏩</span>
+            <span class="btn-label">End Turn</span>
+          </button>
+        </div>
+
+        <!-- Swipe-up Card Panel -->
+        <div class="card-panel" id="card-panel">
+          <div class="panel-handle"></div>
+          <div class="panel-content">
+            
+            <!-- Card Definition Phase -->
+            <div class="card-phase" id="card-definition" style="display: none;">
+              <h3>Define Units - Round <span id="def-round">1</span></h3>
+              
+              <!-- Quick Presets -->
+              <div class="preset-row">
+                <button class="preset-btn" data-preset="scout">
+                  <span class="preset-icon">🏃</span>
+                  <span class="preset-name">Scout</span>
+                  <span class="preset-stats">1/5/1</span>
+                </button>
+                <button class="preset-btn" data-preset="tank">
+                  <span class="preset-icon">🛡️</span>
+                  <span class="preset-name">Tank</span>
+                  <span class="preset-stats">4/1/2</span>
+                </button>
+                <button class="preset-btn" data-preset="assault">
+                  <span class="preset-icon">⚔️</span>
+                  <span class="preset-name">Assault</span>
+                  <span class="preset-stats">3/1/3</span>
+                </button>
+              </div>
+
+              <!-- Unit Cards -->
+              <div class="unit-cards">
+                <div class="unit-card" data-unit="1">
+                  <h4>Unit 1</h4>
+                  <div class="stat-inputs">
+                    <div class="stat-input">
+                      <label>🛡️</label>
+                      <input type="number" min="1" max="5" value="3" data-stat="hp">
+                    </div>
+                    <div class="stat-input">
+                      <label>🐎</label>
+                      <input type="number" min="1" max="5" value="2" data-stat="speed">
+                    </div>
+                    <div class="stat-input">
+                      <label>⚔️</label>
+                      <input type="number" min="1" max="5" value="2" data-stat="attack">
+                    </div>
+                  </div>
+                  <div class="unit-total">Total: <span>7</span>/7</div>
+                </div>
+
+                <div class="unit-card" data-unit="2">
+                  <h4>Unit 2</h4>
+                  <div class="stat-inputs">
+                    <div class="stat-input">
+                      <label>🛡️</label>
+                      <input type="number" min="1" max="5" value="2" data-stat="hp">
+                    </div>
+                    <div class="stat-input">
+                      <label>🐎</label>
+                      <input type="number" min="1" max="5" value="3" data-stat="speed">
+                    </div>
+                    <div class="stat-input">
+                      <label>⚔️</label>
+                      <input type="number" min="1" max="5" value="2" data-stat="attack">
+                    </div>
+                  </div>
+                  <div class="unit-total">Total: <span>7</span>/7</div>
+                </div>
+
+                <div class="unit-card" data-unit="3">
+                  <h4>Unit 3</h4>
+                  <div class="stat-inputs">
+                    <div class="stat-input">
+                      <label>🛡️</label>
+                      <input type="number" min="1" max="5" value="1" data-stat="hp">
+                    </div>
+                    <div class="stat-input">
+                      <label>🐎</label>
+                      <input type="number" min="1" max="5" value="1" data-stat="speed">
+                    </div>
+                    <div class="stat-input">
+                      <label>⚔️</label>
+                      <input type="number" min="1" max="5" value="5" data-stat="attack">
+                    </div>
+                  </div>
+                  <div class="unit-total">Total: <span>7</span>/7</div>
+                </div>
+              </div>
+
+              <button class="primary-btn full-width" id="confirm-cards">Confirm Units</button>
+            </div>
+
+            <!-- Link Phase -->
+            <div class="card-phase" id="card-linking" style="display: none;">
+              <h3>Assign Units to Regiments</h3>
+              <div class="link-instructions">
+                <p>Select a unit card, then tap a regiment on the board</p>
+              </div>
+              <div class="available-units" id="available-units">
+                <!-- Units will be dynamically added -->
+              </div>
+            </div>
+
+            <!-- Action Phase Unit Info -->
+            <div class="card-phase" id="action-info" style="display: none;">
+              <h3>Regiment Info</h3>
+              <div class="selected-unit-info" id="selected-unit-info">
+                <p>Select a regiment to see details</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Chat Panel (slides from right) -->
+        <div class="chat-panel" id="chat-panel">
+          <div class="chat-header">
+            <h3>Battle Chat</h3>
+            <button class="close-chat" id="close-chat">✕</button>
+          </div>
+          <div class="chat-messages" id="chat-messages">
+            <!-- Messages will be added dynamically -->
+          </div>
+          <div class="chat-input-area">
+            <input type="text" 
+                   class="chat-input" 
+                   id="chat-input" 
+                   placeholder="Type message..."
+                   maxlength="100">
+            <button class="send-btn" id="send-message">➤</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Victory Overlay -->
+  <div class="victory-overlay" id="victory-overlay" style="display: none;">
+    <div class="victory-content">
+      <div class="victory-icon">👑</div>
+      <h2 class="victory-title">VICTORY!</h2>
+      <p class="victory-message">
+        Player <span id="winner-name">1</span> has won the battle!
+      </p>
+      <button class="primary-btn" id="play-again">Play Again</button>
+      <button class="secondary-btn" id="back-to-lobby">Back to Lobby</button>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <script src="js/mobile-test-flow.js"></script>
+
+</body>
+</html>
