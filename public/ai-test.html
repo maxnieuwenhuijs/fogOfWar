@@ -357,6 +357,8 @@
     <div class="section">
         <h2>Pattern Analysis</h2>
         <button onclick="analyzePatterns()">Analyze Historical Patterns</button>
+        <button onclick="learnFromLogs()">Learn from Game Logs</button>
+        <button onclick="testLearning()">Test AI Learning</button>
         <div class="output" id="patternOutput"></div>
     </div>
 
@@ -385,6 +387,8 @@
             clearAILearningData,
             getLearningAI
         } from './js/ai-system/singleplayer-integration.js';
+        
+        import { analyzeAndLearnFromLogs } from './js/ai-system/analyze-and-learn.js';
 
         // Help modal functions
         window.showHelp = function() {
@@ -580,6 +584,66 @@
                 } catch (error) {
                     log('Error clearing data: ' + error.message, 'error');
                 }
+            }
+        };
+
+        window.learnFromLogs = async function() {
+            try {
+                log('Analyzing game logs and training AI...');
+                const insights = await analyzeAndLearnFromLogs();
+                
+                document.getElementById('patternOutput').textContent = 
+                    'Learning Results:\n' +
+                    JSON.stringify(insights, null, 2);
+                    
+                log(`Analyzed ${insights.totalGames} games. AI win rate: ${insights.aiWinRate}`);
+                
+                // Refresh stats to show new data
+                await getStats();
+            } catch (error) {
+                log('Error learning from logs: ' + error.message, 'error');
+            }
+        };
+
+        window.testLearning = async function() {
+            try {
+                log('Testing AI learning improvements...');
+                
+                // Test 1: Generate cards against speedy preset
+                const speedyCards = [
+                    { hp: 1, stamina: 5, attack: 1 },
+                    { hp: 1, stamina: 5, attack: 1 },
+                    { hp: 1, stamina: 5, attack: 1 }
+                ];
+                
+                // Set to hard difficulty for best counter
+                setAIDifficulty('hard');
+                const counterCards = await generateAICards(speedyCards);
+                
+                // Check if AI learned to counter high stamina
+                const hasLowStamina = counterCards.some(c => c.stamina <= 2);
+                const hasHighAttack = counterCards.some(c => c.attack >= 3);
+                
+                const results = {
+                    test: 'Counter Strategy',
+                    speedyCards: speedyCards,
+                    aiCounter: counterCards,
+                    learned: hasLowStamina && hasHighAttack,
+                    analysis: hasLowStamina && hasHighAttack ? 
+                        'AI correctly counters high stamina with low stamina + high attack' :
+                        'AI needs more training data'
+                };
+                
+                document.getElementById('patternOutput').textContent = 
+                    'Learning Test Results:\n' +
+                    JSON.stringify(results, null, 2);
+                    
+                log(results.learned ? 
+                    '✓ AI successfully learned counter-strategies!' :
+                    '⚠ AI needs more games to learn effectively');
+                    
+            } catch (error) {
+                log('Error testing learning: ' + error.message, 'error');
             }
         };
 

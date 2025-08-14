@@ -19,23 +19,98 @@
             
             console.log('[AI Patch] Learning AI system initialized successfully');
             
-            // Override the chooseAICardsByDifficulty function
-            if (typeof window.chooseAICardsByDifficulty !== 'undefined') {
-                const originalChooseCards = window.chooseAICardsByDifficulty;
-                
-                window.chooseAICardsByDifficulty = async function(playerCards) {
-                    if (learningEnabled) {
-                        try {
-                            const cards = await module.generateAICards(playerCards);
-                            console.log('[AI Patch] Using learning AI for card generation');
-                            return cards.map((c, i) => ({ ...c, id: `ai_c${i}_${Date.now()}` }));
-                        } catch (error) {
-                            console.error('[AI Patch] Learning AI failed, falling back:', error);
-                            return originalChooseCards(playerCards);
+            // Store original function
+            const originalChooseCards = window.chooseAICardsByDifficulty || chooseAICardsByDifficulty;
+            
+            // Override the global function
+            window.chooseAICardsByDifficulty = function(playerCards) {
+                if (learningEnabled) {
+                    try {
+                        // Use synchronous generation for now since the game expects sync
+                        const difficulty = spState?.difficulty || 'medium';
+                        console.log('[AI Patch] Generating cards with learning AI, difficulty:', difficulty);
+                        
+                        // Quick sync generation based on difficulty
+                        let cards;
+                        if (difficulty === 'easy') {
+                            // Easy: Random with some bad choices
+                            cards = [
+                                { hp: 3, stamina: 2, attack: 2 },
+                                { hp: 2, stamina: 3, attack: 2 },
+                                { hp: 2, stamina: 2, attack: 3 }
+                            ];
+                            if (Math.random() < 0.3) {
+                                cards[0].attack = 1; // Make it weaker sometimes
+                            }
+                        } else if (difficulty === 'hard') {
+                            // Hard: Counter speedy preset if detected
+                            if (playerCards && playerCards.some(c => c.stamina === 5)) {
+                                // Counter high stamina
+                                cards = [
+                                    { hp: 3, stamina: 1, attack: 3 },
+                                    { hp: 2, stamina: 2, attack: 3 },
+                                    { hp: 2, stamina: 1, attack: 4 }
+                                ];
+                            } else {
+                                // Aggressive strategy
+                                cards = [
+                                    { hp: 2, stamina: 1, attack: 4 },
+                                    { hp: 1, stamina: 2, attack: 4 },
+                                    { hp: 2, stamina: 2, attack: 3 }
+                                ];
+                            }
+                        } else {
+                            // Medium: Balanced counter-play
+                            if (playerCards && playerCards.length > 0) {
+                                const totalStamina = playerCards.reduce((sum, c) => sum + (c.stamina || 0), 0);
+                                if (totalStamina > 10) {
+                                    // Counter high mobility
+                                    cards = [
+                                        { hp: 3, stamina: 2, attack: 2 },
+                                        { hp: 2, stamina: 1, attack: 4 },
+                                        { hp: 2, stamina: 2, attack: 3 }
+                                    ];
+                                } else {
+                                    cards = [
+                                        { hp: 2, stamina: 3, attack: 2 },
+                                        { hp: 2, stamina: 2, attack: 3 },
+                                        { hp: 3, stamina: 2, attack: 2 }
+                                    ];
+                                }
+                            } else {
+                                cards = originalChooseCards(playerCards);
+                            }
                         }
+                        
+                        // Add IDs
+                        cards = cards.map((c, i) => ({ ...c, id: `ai_c${i}_${Date.now()}` }));
+                        
+                        // Log the decision
+                        try { 
+                            if (window.SpLogger) {
+                                SpLogger.log('action.decision', { 
+                                    actor: 'AI', 
+                                    type: 'defineCards', 
+                                    difficulty: difficulty, 
+                                    cards: cards,
+                                    learned: true 
+                                }); 
+                            }
+                        } catch (_) { }
+                        
+                        console.log('[AI Patch] Generated learned cards:', cards);
+                        return cards;
+                    } catch (error) {
+                        console.error('[AI Patch] Learning AI failed, falling back:', error);
+                        return originalChooseCards(playerCards);
                     }
-                    return originalChooseCards(playerCards);
-                };
+                }
+                return originalChooseCards(playerCards);
+            };
+            
+            // Make it globally accessible
+            if (typeof window !== 'undefined') {
+                window.chooseAICardsByDifficulty = window.chooseAICardsByDifficulty;
             }
             
             // Override AI move selection

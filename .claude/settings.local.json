@@ -17,7 +17,8 @@
       "Bash(git push:*)",
       "Bash(for file in *.jsonl)",
       "Bash(done)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
