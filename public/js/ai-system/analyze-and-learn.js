@@ -165,22 +165,61 @@ export async function analyzeAndLearnFromLogs() {
 }
 
 function determineWinner(events) {
+    // Check for explicit game over event
     const gameOverEvent = events.find(e => e.event === 'game.over');
-    if (gameOverEvent) {
-        return gameOverEvent.data?.winner || 0;
+    if (gameOverEvent && gameOverEvent.data?.winner !== undefined) {
+        console.log('[AI Learning] Found game.over event, winner:', gameOverEvent.data.winner);
+        return gameOverEvent.data.winner;
+    }
+    
+    // Check for client-side game over
+    const clientGameOver = events.find(e => e.event === 'game.over.client');
+    if (clientGameOver && clientGameOver.data?.winner !== undefined) {
+        console.log('[AI Learning] Found game.over.client event, winner:', clientGameOver.data.winner);
+        return clientGameOver.data.winner;
+    }
+    
+    // Check session end event
+    const sessionEnd = events.find(e => e.event === 'session.end');
+    if (sessionEnd && sessionEnd.data?.winner !== undefined) {
+        console.log('[AI Learning] Found session.end event, winner:', sessionEnd.data.winner);
+        return sessionEnd.data.winner;
     }
     
     // Try to infer from haven reach events
     const havenEvents = events.filter(e => 
         e.event === 'pawn.reached.haven' || 
-        e.event === 'victory'
+        e.event === 'victory' ||
+        (e.event === 'move.pawn' && e.data?.to?.y === 0) || // Player 1 reached top
+        (e.event === 'move.pawn' && e.data?.to?.y === 10) // Player 2 reached bottom
     );
     
     if (havenEvents.length > 0) {
         const lastHaven = havenEvents[havenEvents.length - 1];
-        return lastHaven.data?.player || 0;
+        const player = lastHaven.data?.player || (lastHaven.data?.to?.y === 0 ? 1 : 2);
+        console.log('[AI Learning] Inferred winner from haven reach:', player);
+        return player;
     }
     
+    // Try to infer from elimination
+    const boardSnapshots = events.filter(e => e.event === 'board.snapshot');
+    if (boardSnapshots.length > 0) {
+        const lastSnapshot = boardSnapshots[boardSnapshots.length - 1];
+        if (lastSnapshot.data) {
+            const p1ActivePawns = (lastSnapshot.data.p1 || []).filter(p => p.act && p.hp > 0).length;
+            const p2ActivePawns = (lastSnapshot.data.p2 || []).filter(p => p.act && p.hp > 0).length;
+            
+            if (p1ActivePawns === 0 && p2ActivePawns > 0) {
+                console.log('[AI Learning] Inferred winner from elimination: Player 2 (AI)');
+                return 2;
+            } else if (p2ActivePawns === 0 && p1ActivePawns > 0) {
+                console.log('[AI Learning] Inferred winner from elimination: Player 1');
+                return 1;
+            }
+        }
+    }
+    
+    console.log('[AI Learning] Could not determine winner for game');
     return 0; // Unknown
 }
 
