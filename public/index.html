@@ -39,6 +39,11 @@
 
   <!-- Lobby Screens -->
   <div id="lobby-screen" class="screen">
+    <!-- Back to menu button -->
+    <button id="lobby-back-btn" class="menu-button back" style="position: absolute; top: 15px; left: 15px; z-index: 100;">
+      <span class="button-icon">⬅️</span>
+      <span class="button-text">Menu</span>
+    </button>
     <!-- Removed original h1 here -->
     <div class="lobby-container">
       <!-- Top buttons row -->
@@ -244,31 +249,67 @@
             <div class="card-inputs">
               <h4>Unit 1</h4>
               <label>🛡️ Resilience (HP):
-                <input type="number" id="card1-hp" min="1" max="5" value="3" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card1-hp">▼</button>
+                  <input type="number" id="card1-hp" min="1" max="5" value="3" />
+                  <button type="button" class="arrow-btn up" data-input="card1-hp">▲</button>
+                </div></label>
               <label>🐎 March (Stamina):
-                <input type="number" id="card1-stamina" min="1" max="5" value="2" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card1-stamina">▼</button>
+                  <input type="number" id="card1-stamina" min="1" max="5" value="2" />
+                  <button type="button" class="arrow-btn up" data-input="card1-stamina">▲</button>
+                </div></label>
               <label>⚔️ Might (Attack):
-                <input type="number" id="card1-attack" min="1" max="5" value="2" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card1-attack">▼</button>
+                  <input type="number" id="card1-attack" min="1" max="5" value="2" />
+                  <button type="button" class="arrow-btn up" data-input="card1-attack">▲</button>
+                </div></label>
               <span class="card-sum" id="card1-sum">Total: 7</span>
             </div>
             <div class="card-inputs">
               <h4>Unit 2</h4>
               <label>🛡️ Resilience (HP):
-                <input type="number" id="card2-hp" min="1" max="5" value="2" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card2-hp">▼</button>
+                  <input type="number" id="card2-hp" min="1" max="5" value="2" />
+                  <button type="button" class="arrow-btn up" data-input="card2-hp">▲</button>
+                </div></label>
               <label>🐎 March (Stamina):
-                <input type="number" id="card2-stamina" min="1" max="5" value="3" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card2-stamina">▼</button>
+                  <input type="number" id="card2-stamina" min="1" max="5" value="3" />
+                  <button type="button" class="arrow-btn up" data-input="card2-stamina">▲</button>
+                </div></label>
               <label>⚔️ Might (Attack):
-                <input type="number" id="card2-attack" min="1" max="5" value="2" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card2-attack">▼</button>
+                  <input type="number" id="card2-attack" min="1" max="5" value="2" />
+                  <button type="button" class="arrow-btn up" data-input="card2-attack">▲</button>
+                </div></label>
               <span class="card-sum" id="card2-sum">Total: 7</span>
             </div>
             <div class="card-inputs">
               <h4>Unit 3</h4>
               <label>🛡️ Resilience (HP):
-                <input type="number" id="card3-hp" min="1" max="5" value="1" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card3-hp">▼</button>
+                  <input type="number" id="card3-hp" min="1" max="5" value="1" />
+                  <button type="button" class="arrow-btn up" data-input="card3-hp">▲</button>
+                </div></label>
               <label>🐎 March (Stamina):
-                <input type="number" id="card3-stamina" min="1" max="5" value="1" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card3-stamina">▼</button>
+                  <input type="number" id="card3-stamina" min="1" max="5" value="1" />
+                  <button type="button" class="arrow-btn up" data-input="card3-stamina">▲</button>
+                </div></label>
               <label>⚔️ Might (Attack):
-                <input type="number" id="card3-attack" min="1" max="5" value="5" /></label>
+                <div class="input-with-arrows">
+                  <button type="button" class="arrow-btn down" data-input="card3-attack">▼</button>
+                  <input type="number" id="card3-attack" min="1" max="5" value="5" />
+                  <button type="button" class="arrow-btn up" data-input="card3-attack">▲</button>
+                </div></label>
               <span class="card-sum" id="card3-sum">Total: 7</span>
             </div>
           </div>
@@ -515,8 +556,18 @@
           try {
             // Check if singleplayer or multiplayer
             if (gameState && gameState.singleplayerMode) {
-              // Singleplayer: restart immediately
+              // Singleplayer: clean up and restart
               document.getElementById('game-over').style.display = 'none';
+              
+              // Clean up the previous game first
+              if (typeof cleanupSingleplayer === 'function') {
+                cleanupSingleplayer();
+              }
+              
+              // Small delay to ensure cleanup completes
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
+              // Start new game
               if (typeof initSimpleSingleplayer === 'function') {
                 await initSimpleSingleplayer();
               }
@@ -543,6 +594,13 @@
           try {
             document.getElementById('game-over').style.display = 'none';
             if (replayRequestUI) replayRequestUI.style.display = 'none';
+            
+            // Clean up singleplayer if active
+            if (gameState && gameState.singleplayerMode) {
+              if (typeof cleanupSingleplayer === 'function') {
+                cleanupSingleplayer();
+              }
+            }
             
             // For multiplayer, disconnect from room
             if (socket && gameSession && gameSession.roomCode && !gameState.singleplayerMode) {

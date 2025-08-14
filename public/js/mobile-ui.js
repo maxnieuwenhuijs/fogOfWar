@@ -16,6 +16,71 @@
         };
         const isDrawerOpen = () => !!drawer && drawer.classList.contains('open');
         const toggleDrawer = () => setDrawerOpen(!isDrawerOpen());
+        
+        // Add swipe gesture support for card drawer
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let drawerStartOpen = false;
+        
+        const handleTouchStart = (e) => {
+            if (!drawer) return;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            drawerStartOpen = isDrawerOpen();
+        };
+        
+        const handleTouchEnd = (e) => {
+            if (!drawer) return;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaY = touchEndY - touchStartY;
+            const deltaTime = Date.now() - touchStartTime;
+            
+            // Quick swipe detection (less than 300ms and more than 50px movement)
+            if (deltaTime < 300 && Math.abs(deltaY) > 50) {
+                if (deltaY > 0 && drawerStartOpen) {
+                    // Swipe down - close drawer
+                    setDrawerOpen(false);
+                    try { if (window.SpLogger) SpLogger.log('ui.drawer.swipe', { direction: 'down', action: 'close' }); } catch (_) { }
+                } else if (deltaY < 0 && !drawerStartOpen) {
+                    // Swipe up - open drawer
+                    setDrawerOpen(true);
+                    try { if (window.SpLogger) SpLogger.log('ui.drawer.swipe', { direction: 'up', action: 'open' }); } catch (_) { }
+                }
+            }
+        };
+        
+        // Attach swipe handlers to drawer
+        if (drawer) {
+            drawer.addEventListener('touchstart', handleTouchStart, { passive: true });
+            drawer.addEventListener('touchend', handleTouchEnd, { passive: true });
+        }
+        
+        // Also add swipe detection to the game board area for opening drawer
+        const boardWrapper = document.getElementById('board-background-wrapper');
+        if (boardWrapper) {
+            boardWrapper.addEventListener('touchstart', (e) => {
+                // Only track if drawer is closed and touch is in bottom third of screen
+                if (!isDrawerOpen() && e.touches[0].clientY > window.innerHeight * 0.66) {
+                    touchStartY = e.touches[0].clientY;
+                    touchStartTime = Date.now();
+                    drawerStartOpen = false;
+                }
+            }, { passive: true });
+            
+            boardWrapper.addEventListener('touchend', (e) => {
+                if (!isDrawerOpen()) {
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const deltaY = touchEndY - touchStartY;
+                    const deltaTime = Date.now() - touchStartTime;
+                    
+                    // Swipe up from bottom to open drawer
+                    if (deltaTime < 300 && deltaY < -50) {
+                        setDrawerOpen(true);
+                        try { if (window.SpLogger) SpLogger.log('ui.drawer.swipe', { direction: 'up', action: 'open', source: 'board' }); } catch (_) { }
+                    }
+                }
+            }, { passive: true });
+        }
         // Expose globally so other modules (and console) can control the drawer
         try {
             window.MobileUI = Object.assign(window.MobileUI || {}, { setDrawerOpen, toggleDrawer, isDrawerOpen });

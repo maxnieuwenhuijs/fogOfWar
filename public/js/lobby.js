@@ -449,6 +449,30 @@ function setupEventListeners() {
 function initializeLobby() {
     initializeSocket();
     setupEventListeners();
+    
+    // Add back button handler
+    const lobbyBackBtn = document.getElementById('lobby-back-btn');
+    if (lobbyBackBtn && !lobbyBackBtn.hasAttribute('data-initialized')) {
+        lobbyBackBtn.setAttribute('data-initialized', 'true');
+        lobbyBackBtn.addEventListener('click', function() {
+            // Disconnect from socket if connected
+            if (socket && socket.connected) {
+                socket.disconnect();
+                socket = null;
+                window.socket = null;
+            }
+            
+            // Hide lobby screen
+            if (screens.lobby) {
+                screens.lobby.classList.remove('active');
+            }
+            
+            // Show main menu
+            if (typeof menuSystem !== 'undefined' && typeof menuSystem.showMainMenu === 'function') {
+                menuSystem.showMainMenu();
+            }
+        });
+    }
 }
 
 // Initialize when DOM is loaded

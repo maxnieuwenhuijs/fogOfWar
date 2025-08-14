@@ -292,9 +292,9 @@
     if (canPlayerLinkLocal(nextPlayer)) {
       gameState.currentPlayer = nextPlayer;
       socket._dispatch("nextLinkTurn", { currentPlayer: gameState.currentPlayer });
-      // If it's AI's turn after switching, let AI link one
+      // If it's AI's turn after switching, let AI link one with small delay
       if (gameState.currentPlayer === PLAYER_2) {
-        setTimeout(ensureAILinkingIfTurn, 150);
+        setTimeout(ensureAILinkingIfTurn, 250);
       }
     } else if (canPlayerLinkLocal(playerWhoJustActed)) {
       gameState.currentPlayer = playerWhoJustActed;
@@ -339,12 +339,16 @@
       finishLinkingOrNextTurn(PLAYER_2);
       return;
     }
-    const didLink = linkFirstAvailableForPlayer(PLAYER_2);
-    if (didLink) {
-      setTimeout(() => finishLinkingOrNextTurn(PLAYER_2), 150);
-    } else {
-      finishLinkingOrNextTurn(PLAYER_2);
-    }
+    // Add a small delay before AI links to ensure visuals are ready
+    setTimeout(() => {
+      const didLink = linkFirstAvailableForPlayer(PLAYER_2);
+      if (didLink) {
+        // Small delay between links for visual update
+        setTimeout(() => finishLinkingOrNextTurn(PLAYER_2), 200);
+      } else {
+        finishLinkingOrNextTurn(PLAYER_2);
+      }
+    }, 150);
   }
 
   function distanceToAny(targets, x, y) {
@@ -658,7 +662,24 @@
         p.remainingStamina = null;
         if (typeof p.hideStatsDisplay === "function") p.hideStatsDisplay();
         if (typeof p.updateBars === "function") p.updateBars();
-        if (p.pixiObject) p.pixiObject.alpha = 1.0;
+        if (p.pixiObject) {
+          p.pixiObject.alpha = 1.0;
+          // Ensure the pawn visual is properly displayed
+          if (p.graphics && p.graphics.texture) {
+            // Re-check texture validity for sprites
+            const textureAlias = p.player === PLAYER_1 ? 'p1_piece' : 'p2_piece';
+            if (typeof ICON_TEXTURES !== 'undefined' && ICON_TEXTURES && ICON_TEXTURES[textureAlias] && ICON_TEXTURES[textureAlias].valid) {
+              p.graphics.texture = ICON_TEXTURES[textureAlias];
+            }
+          }
+          // Make sure the pawn is visible
+          p.pixiObject.visible = true;
+          if (p.graphics) p.graphics.visible = true;
+          // Update position to ensure pawn is at correct location
+          if (typeof p.updatePosition === "function") {
+            p.updatePosition(p.gridX, p.gridY);
+          }
+        }
       });
       gameState.activePawnsThisCycle[pn] = [];
     });
@@ -725,9 +746,9 @@
           };
           socket._dispatch("startLinking", linkingPayload);
           try { if (window.SpLogger) SpLogger.log("phase.link.start", linkingPayload); } catch (_) { }
-          // If AI starts linking, auto-link one
+          // If AI starts linking, auto-link one with small delay
           if (initiative === PLAYER_2) {
-            setTimeout(ensureAILinkingIfTurn, 150);
+            setTimeout(ensureAILinkingIfTurn, 250);
           }
         }, 150);
         break;
@@ -911,9 +932,67 @@
     }
   }
 
+  // --- Cleanup function ---
+  window.cleanupSingleplayer = function() {
+    console.log(SP_LOG_PREFIX, "Cleaning up singleplayer...");
+    
+    // Clear all socket event handlers
+    if (window.socket && window.socket.off) {
+      window.socket.off();
+    }
+    
+    // Destroy PIXI app if it exists
+    if (typeof app !== 'undefined' && app && app.destroy) {
+      console.log(SP_LOG_PREFIX, "Destroying PIXI application");
+      app.destroy(true, { children: true, texture: true, baseTexture: true });
+    }
+    
+    // Clear game state
+    if (gameState) {
+      gameState.currentPhase = 'PRE_GAME';
+      gameState.winner = null;
+      gameState.cycleNumber = 1;
+      gameState.roundNumber = 1;
+      gameState.currentPlayer = null;
+      gameState.singleplayerMode = false;
+      
+      // Clear players data
+      if (gameState.players) {
+        [PLAYER_1, PLAYER_2].forEach(pn => {
+          if (gameState.players[pn]) {
+            gameState.players[pn].pawns = [];
+            gameState.players[pn].cardsAvailableForLinking = [];
+          }
+        });
+      }
+      
+      // Clear active pawns
+      if (gameState.activePawnsThisCycle) {
+        gameState.activePawnsThisCycle[PLAYER_1] = [];
+        gameState.activePawnsThisCycle[PLAYER_2] = [];
+      }
+    }
+    
+    // Clear SP state
+    spState.initiativePlayerPerRound = {};
+    spState.cycleInitiativePlayer = null;
+    spState.aiCardsByRound = {};
+    
+    // Hide game UI elements
+    const gameArea = document.getElementById('game-area');
+    if (gameArea) gameArea.style.display = 'none';
+    
+    console.log(SP_LOG_PREFIX, "Cleanup complete");
+  };
+
   // --- Entry point ---
   window.initSimpleSingleplayer = async function () {
     console.log(SP_LOG_PREFIX, "Initializing singleplayer...");
+    
+    // Clean up any previous game first
+    if (window.cleanupSingleplayer) {
+      window.cleanupSingleplayer();
+    }
     
     // Load assets first to ensure pawn textures are available
     console.log(SP_LOG_PREFIX, "Loading game assets...");

@@ -505,6 +505,34 @@ function setupCardInputListeners() {
   } else {
     console.warn("setupCardInputListeners: cardInputsDivs not found or empty.");
   }
+  
+  // --- Setup Arrow Button Listeners for mobile ---
+  const arrowButtons = document.querySelectorAll('.arrow-btn');
+  arrowButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const inputId = btn.dataset.input;
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      
+      let currentVal = parseInt(input.value, 10) || 1;
+      if (btn.classList.contains('up')) {
+        currentVal = Math.min(5, currentVal + 1);
+      } else if (btn.classList.contains('down')) {
+        currentVal = Math.max(1, currentVal - 1);
+      }
+      
+      input.value = currentVal;
+      // Trigger the input event to update the sum
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      // Reset the timer when using arrow buttons
+      if (typeof startPhaseTimer === "function") {
+        startPhaseTimer(40);
+        console.log("Timer reset due to arrow button click");
+      }
+    });
+  });
 
   // --- Setup Preset Button Listeners ---
   presetButtonListeners.forEach(({ element, handler }) =>
@@ -549,8 +577,9 @@ function applyCardPreset(presetId) {
       // (since the UI still calls it speed but the game logic treats it as stamina)
       staminaInput.value = presetStats.stamina;
       attackInput.value = presetStats.attack;
-      sumSpan.textContent = "Sum: 7";
+      sumSpan.textContent = "Total: 7";
       sumSpan.style.color = "#555";
+      sumSpan.title = "";
     }
   });
 
@@ -585,18 +614,16 @@ function adjustCardValues(
   attackInput,
   sumSpan
 ) {
-  const inputs = { hp: hpInput, spd: staminaInput, atk: attackInput };
-  const order = ["hp", "spd", "atk"];
-  let changedKey = Object.keys(inputs).find((k) => inputs[k] === changedInput);
-  if (!changedKey) return;
-
-  // 1. Valideer de gewijzigde waarde (min 1, max 5)
+  // Simply validate min/max bounds and update sum display
+  // No longer auto-adjust to keep sum at 7
+  
+  // Validate the changed value (min 1, max 5)
   let valChanged = parseInt(changedInput.value, 10);
   if (isNaN(valChanged)) valChanged = 1;
   valChanged = Math.max(1, Math.min(5, valChanged));
   changedInput.value = valChanged;
 
-  // 2. Haal huidige waarden op (met min 1 en max 5) en update inputs
+  // Get current values (with min 1 and max 5)
   let vH = Math.max(1, Math.min(5, parseInt(hpInput.value, 10) || 1));
   let vS = Math.max(1, Math.min(5, parseInt(staminaInput.value, 10) || 1));
   let vA = Math.max(1, Math.min(5, parseInt(attackInput.value, 10) || 1));
@@ -604,46 +631,18 @@ function adjustCardValues(
   staminaInput.value = vS;
   attackInput.value = vA;
 
-  // 3. Bereken verschil met doel (7)
-  let currentSum = vH + vS + vA;
-  let diff = currentSum - 7;
-
-  // 4. Corrigeer als som te hoog is
-  if (diff > 0) {
-    // Sorteer de *andere* keys op basis van hun waarde (hoog naar laag)
-    const otherKeys = order
-      .filter((k) => k !== changedKey)
-      .sort((a, b) => {
-        const valB = parseInt(inputs[b].value, 10) || 1; // Lees huidige waarde
-        const valA = parseInt(inputs[a].value, 10) || 1; // Lees huidige waarde
-        return valB - valA; // Sorteer DESC
-      }); // <--- Controleer of dit haakje correct sluit
-
-    for (const k of otherKeys) {
-      if (diff <= 0) break;
-      const inp = inputs[k];
-      const cV = parseInt(inp.value, 10); // Lees huidige waarde weer
-      const reduction = Math.min(diff, cV - 1);
-      if (reduction > 0) {
-        inp.value = cV - reduction;
-        diff -= reduction;
-      }
-    }
-
-    // Als nog steeds te hoog, verlaag de originele input
-    if (diff > 0) {
-      valChanged = parseInt(changedInput.value, 10); // Lees opnieuw
-      changedInput.value = Math.max(1, valChanged - diff);
-    }
+  // Calculate and display sum
+  const finalSum = vH + vS + vA;
+  sumSpan.textContent = `Total: ${finalSum}`;
+  
+  // Show red color if sum is not exactly 7
+  if (finalSum !== 7) {
+    sumSpan.style.color = "red";
+    sumSpan.title = finalSum > 7 ? "Total exceeds 7 points" : "Total is less than 7 points";
+  } else {
+    sumSpan.style.color = "#555";
+    sumSpan.title = "";
   }
-  // 5. Herbereken en update UI
-  const finalH = parseInt(hpInput.value, 10) || 0;
-  const finalS = parseInt(staminaInput.value, 10) || 0;
-  const finalA = parseInt(attackInput.value, 10) || 0;
-  const finalSum = finalH + finalS + finalA;
-
-  sumSpan.textContent = `Sum: ${finalSum}`;
-  sumSpan.style.color = finalSum === 7 ? "#555" : "red";
 }
 
 // --- Update revealed cards display ---
@@ -864,11 +863,17 @@ function updateLinkingUI() {
           // --- UPDATE EXISTING ELEMENT ---
           const currentlyLinked = cardElement.classList.contains("linked");
 
-          // Update linked status class and overlay
-          const overlay = cardElement.querySelector('.linked-overlay');
+          // Check if card exceeds 7 points
+          const totalPoints = (card.hp || 0) + (card.stamina || 0) + (card.attack || 0);
+          const isBlocked = totalPoints > 7;
+          
+          // Update linked/blocked status class and overlay
+          const overlay = cardElement.querySelector('.linked-overlay, .blocked-overlay');
           if (card.isLinked) {
             cardElement.classList.add("linked");
-            if (!overlay) { // Add overlay if it doesn't exist
+            cardElement.classList.remove("blocked");
+            if (!overlay || !overlay.classList.contains('linked-overlay')) {
+              if (overlay) overlay.remove();
               const newOverlay = document.createElement('div');
               newOverlay.className = 'linked-overlay';
               newOverlay.textContent = 'ASSIGNED';
@@ -876,9 +881,23 @@ function updateLinkingUI() {
             }
             cardElement.onclick = null;
             cardElement.style.cursor = "not-allowed";
+          } else if (isBlocked) {
+            cardElement.classList.add("blocked");
+            cardElement.classList.remove("linked");
+            if (!overlay || !overlay.classList.contains('blocked-overlay')) {
+              if (overlay) overlay.remove();
+              const newOverlay = document.createElement('div');
+              newOverlay.className = 'blocked-overlay';
+              newOverlay.textContent = 'INVALID';
+              newOverlay.title = 'Total points exceed 7';
+              cardElement.appendChild(newOverlay);
+            }
+            cardElement.onclick = null;
+            cardElement.style.cursor = "not-allowed";
           } else {
             cardElement.classList.remove("linked");
-            if (overlay) { // Remove overlay if it exists
+            cardElement.classList.remove("blocked");
+            if (overlay) {
               overlay.remove();
             }
             // Click handler re-added below if applicable
@@ -887,9 +906,10 @@ function updateLinkingUI() {
           // Update selected status class
           cardElement.classList.toggle("card-selected", window.selectedCardToLink === card);
 
-          // Update click handler and cursor - only for unlinked cards that belong to the current player IF they can link
+          // Update click handler and cursor - only for unlinked, unblocked cards that belong to the current player IF they can link
           if (
             !card.isLinked &&
+            !isBlocked &&
             isYourTurn &&
             playerNum === yourPlayerNum &&
             canLink // Check if linking is possible
@@ -899,9 +919,9 @@ function updateLinkingUI() {
               handleCardLinkSelection(card, cardElement);
             cardElement.style.cursor = "pointer";
           } else {
-            // Remove handler and set cursor for non-clickable cards (linked, not your turn, or no pawns/cards available)
+            // Remove handler and set cursor for non-clickable cards (linked, blocked, not your turn, or no pawns/cards available)
             cardElement.onclick = null;
-            cardElement.style.cursor = card.isLinked ? "not-allowed" : "default";
+            cardElement.style.cursor = (card.isLinked || isBlocked) ? "not-allowed" : "default";
           }
 
           // Move to correct container (appendChild moves the element)

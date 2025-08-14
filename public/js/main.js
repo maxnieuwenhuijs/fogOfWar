@@ -450,22 +450,7 @@ async function initGame() {
         const ro = new ResizeObserver(() => resizeCanvas('observer'));
         try { ro.observe(gameContainer); } catch (_) { }
 
-        // Global diagnostic: log topmost element and parent chain at pointer position to detect overlay blocking
-        try {
-            const logHitTest = (e) => {
-                const el = document.elementFromPoint(e.clientX, e.clientY);
-                const chain = [];
-                let cur = el;
-                while (cur && chain.length < 6) {
-                    chain.push({ tag: cur.tagName, id: cur.id || null, class: cur.className || null, z: getComputedStyle(cur).zIndex });
-                    cur = cur.parentElement;
-                }
-                const payload = { x: e.clientX, y: e.clientY, chain };
-                if (window.SpLogger) SpLogger.log('pointer.hittest', payload);
-                try { console.log('[pointer.hittest]', payload); } catch (_) { }
-            };
-            window.addEventListener('pointerdown', logHitTest, { passive: true });
-        } catch (_) { }
+        // Removed pointer hittest debug functionality
 
         // Physics-based drag removed
 

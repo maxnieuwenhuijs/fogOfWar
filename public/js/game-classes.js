@@ -257,6 +257,25 @@ class Pawn {
   }
 
   updateStatsDisplay(card, currentHPToShow = null) {
+    // Ensure main pawn graphic is visible and has proper texture
+    if (this.pixiObject && !this.pixiObject.destroyed) {
+      this.pixiObject.visible = true;
+      if (this.graphics) {
+        this.graphics.visible = true;
+        // Re-apply texture if it's a sprite and texture was lost
+        if (this.graphics instanceof PIXI.Sprite) {
+          const textureAlias = this.player === PLAYER_1 ? 'p1_piece' : 'p2_piece';
+          if (typeof ICON_TEXTURES !== 'undefined' && ICON_TEXTURES && ICON_TEXTURES[textureAlias] && ICON_TEXTURES[textureAlias].valid) {
+            if (!this.graphics.texture || !this.graphics.texture.valid) {
+              this.graphics.texture = ICON_TEXTURES[textureAlias];
+              const spriteScale = (CELL_SIZE * 0.8) / Math.max(ICON_TEXTURES[textureAlias].width, ICON_TEXTURES[textureAlias].height);
+              this.graphics.scale.set(spriteScale);
+            }
+          }
+        }
+      }
+    }
+    
     // --- Update Stats Text (Always update content, but hide visibility) ---
     if (
       !card ||
@@ -430,6 +449,22 @@ class Pawn {
     // If visual is already destroyed or missing, skip
     if (!this.pixiObject || this.pixiObject.destroyed) {
       return;
+    }
+    
+    // Ensure main pawn graphic stays visible when active
+    if (this.isActive && this.graphics) {
+      this.graphics.visible = true;
+      // Re-check texture for sprites
+      if (this.graphics instanceof PIXI.Sprite) {
+        const textureAlias = this.player === PLAYER_1 ? 'p1_piece' : 'p2_piece';
+        if (typeof ICON_TEXTURES !== 'undefined' && ICON_TEXTURES && ICON_TEXTURES[textureAlias] && ICON_TEXTURES[textureAlias].valid) {
+          if (!this.graphics.texture || !this.graphics.texture.valid) {
+            this.graphics.texture = ICON_TEXTURES[textureAlias];
+            const spriteScale = (CELL_SIZE * 0.8) / Math.max(ICON_TEXTURES[textureAlias].width, ICON_TEXTURES[textureAlias].height);
+            this.graphics.scale.set(spriteScale);
+          }
+        }
+      }
     }
     if (!this.isActive || !this.linkedCard) {
       this.staminaBarContainer.visible = false;

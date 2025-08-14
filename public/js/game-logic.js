@@ -1607,6 +1607,15 @@ function handleCardLinkSelection(card, cardDiv) {
   ) {
     return; // Ignore clicks if not linking phase, not player's turn, or card already linked
   }
+  
+  // Block cards with more than 7 total points from being linked
+  const totalPoints = (card.hp || 0) + (card.stamina || 0) + (card.attack || 0);
+  if (totalPoints > 7) {
+    console.log(`Card ${card.id} blocked from linking: Total points ${totalPoints} exceeds 7`);
+    showToast("Cannot link card: Total points exceed 7");
+    if (typeof soundManager !== "undefined") soundManager.playSound("ui_error");
+    return;
+  }
 
   const previouslySelectedCardId = selectedCardToLink?.id;
 
