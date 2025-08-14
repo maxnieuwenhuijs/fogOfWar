@@ -24,7 +24,9 @@
         
         if (player1Victory || player2Victory) {
             const winner = player1Victory ? 1 : 2;
-            const reason = player1Victory ? 'Player reached AI haven' : 'AI reached player haven';
+            const reason = player1Victory ? 
+                'Player captured haven (2 pawns reached target)' : 
+                'AI captured haven (2 pawns reached target)';
             
             logGameOver(winner, reason);
         }
@@ -42,15 +44,48 @@
         }
     }
     
-    // Check if a player has reached opponent's haven
+    // Check if a player has reached opponent's haven (needs 2 pawns!)
     function checkPlayerVictory(player) {
-        const targetRow = player === 1 ? 0 : 10;
         const pawns = getActivePawns(player);
         
-        return pawns.some(pawn => {
-            if (!pawn || !pawn.gridY !== undefined) return false;
-            return pawn.gridY === targetRow;
+        // Define target haven positions based on game constants
+        // Player 1 needs to reach top (y=0), Player 2 needs to reach bottom (y=10)
+        let targetHavens;
+        if (player === 1) {
+            // Player 1 targets: top row center and corners
+            targetHavens = [
+                {x: 0, y: 0},   // Top left corner
+                {x: 4, y: 0},   // Top center-left
+                {x: 5, y: 0},   // Top center
+                {x: 6, y: 0},   // Top center-right
+                {x: 10, y: 0}   // Top right corner
+            ];
+        } else {
+            // Player 2 (AI) targets: bottom row center and corners
+            targetHavens = [
+                {x: 0, y: 10},  // Bottom left corner
+                {x: 4, y: 10},  // Bottom center-left
+                {x: 5, y: 10},  // Bottom center
+                {x: 6, y: 10},  // Bottom center-right
+                {x: 10, y: 10}  // Bottom right corner
+            ];
+        }
+        
+        // Count how many pawns are in target havens
+        const pawnsInHaven = pawns.filter(pawn => {
+            if (!pawn || pawn.gridX === undefined || pawn.gridY === undefined) return false;
+            return targetHavens.some(haven => 
+                haven.x === pawn.gridX && haven.y === pawn.gridY
+            );
         });
+        
+        // Log progress toward victory
+        if (pawnsInHaven.length > 0) {
+            console.log(`[Victory Fix] Player ${player} has ${pawnsInHaven.length}/2 pawns in target havens`);
+        }
+        
+        // Victory requires 2 or more pawns in haven
+        return pawnsInHaven.length >= 2;
     }
     
     // Get active pawns for a player
