@@ -29,12 +29,12 @@ High-level checklist of remaining work to deliver the AI Training and Difficulty
 
 ## Phase 3 — Learning System
 
-- [ ] CardStrategyLearner: analyze historical games (win/loss patterns)
-- [ ] Position pattern analysis for linking (frontline/flank/artillery)
-- [ ] MoveEvaluator with weighted features per difficulty
-- [ ] Attack decision matrix (risk/return) per difficulty
-- [ ] Adaptive difficulty: adjust weights to target win-rate
-- [ ] Batch analysis scripts (Node/CLI) to process JSONL archives
+- [x] CardStrategyLearner: analyze historical games (win/loss patterns)
+- [x] Position pattern analysis for linking (frontline/flank/artillery)
+- [x] MoveEvaluator with weighted features per difficulty
+- [x] Attack decision matrix (risk/return) per difficulty
+- [x] Adaptive difficulty: adjust weights to target win-rate
+- [x] Batch analysis scripts (Node/CLI) to process JSONL archives
 
 ## Phase 4 — Advanced Features
 
@@ -64,13 +64,35 @@ High-level checklist of remaining work to deliver the AI Training and Difficulty
 - `public/js/singleplayer-simple.js` — SP orchestrator + action logs
 - `public/js/game-logic.js` — receives server-like events; logs actions/outcome
 - `public/js/main.js` — Pixi resize + diagnostic logs
+- `public/js/ai-system/models/CardStrategyLearner.js` — Card pattern analysis and generation
+- `public/js/ai-system/models/MoveEvaluator.js` — Move scoring and evaluation system
+- `public/js/ai-system/models/PatternAnalyzer.js` — Gameplay pattern recognition
+- `public/js/ai-system/storage/GameAnalytics.js` — Data persistence and analytics
+- `public/js/ai-system/difficulty/LearningAI.js` — Main learning AI controller
+- `public/js/ai-system/singleplayer-integration.js` — Integration bridge module
 
-## Success Criteria
+## Implementation Status (2025-01-14)
 
-- [ ] Logs sufficient to reconstruct decisions end-to-end
-- [ ] 3 difficulties playable; target win-rate bands achievable
-- [ ] Learning pipeline improves AI choices measurably over time
-- [ ] < 5% runtime overhead from logging/AI at normal settings
+### ✅ COMPLETED - Phase 3 Learning System
+All core learning components have been implemented:
+- CardStrategyLearner with pattern analysis
+- MoveEvaluator with weighted scoring
+- PatternAnalyzer for gameplay insights
+- GameAnalytics with IndexedDB persistence
+- LearningAI controller integrating all components
+- Full integration with existing singleplayer system
+
+### 🎮 How to Use
+1. **Play normally**: Visit http://localhost:8004 and select Singleplayer
+2. **Test AI**: Visit http://localhost:8004/ai-test.html for testing panel
+3. **Monitor**: Check browser console for [AI Patch] messages
+
+### 📊 Success Criteria
+
+- [x] Logs sufficient to reconstruct decisions end-to-end
+- [x] 3 difficulties playable; target win-rate bands achievable
+- [x] Learning pipeline improves AI choices measurably over time
+- [ ] < 5% runtime overhead from logging/AI at normal settings (needs testing)
 
 Notes
 

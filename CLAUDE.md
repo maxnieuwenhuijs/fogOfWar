@@ -89,6 +89,30 @@ Key physics parameters accessible via `window.physicsTestPanel.settings`:
 - **Real-time sync**: All actions validated server-side before broadcasting
 - **Test mode**: Can bypass server validation for local testing
 
+### AI Learning System
+
+The game features an advanced AI learning system that adapts to player behavior:
+
+**Core Components:**
+- `ai-system/models/CardStrategyLearner.js` - Analyzes winning card patterns and generates counter-strategies
+- `ai-system/models/MoveEvaluator.js` - Multi-factor move evaluation with difficulty-specific weights
+- `ai-system/models/PatternAnalyzer.js` - Gameplay pattern recognition and analysis
+- `ai-system/storage/GameAnalytics.js` - IndexedDB persistence and performance tracking
+- `ai-system/difficulty/LearningAI.js` - Main controller integrating all AI components
+- `ai-system/singleplayer-integration.js` - Bridge between learning system and game
+
+**AI Features:**
+- **Adaptive Difficulty**: Maintains target win rates (Easy: 70%, Medium: 50%, Hard: 30%)
+- **Pattern Learning**: Analyzes successful strategies from historical games
+- **Counter-Strategy Generation**: Creates cards specifically to counter player patterns
+- **Move Evaluation**: Weighted scoring based on haven distance, threats, attack opportunities
+- **Performance Tracking**: Monitors and adjusts based on win rates
+
+**Testing & Monitoring:**
+- Visit `/ai-test.html` for the AI testing panel
+- Check browser console for `[AI Patch]` and `[AI Integration]` messages
+- AI data persists in IndexedDB across sessions
+
 ### Common Development Patterns
 
 **Adding new socket events:**
@@ -105,3 +129,9 @@ Key physics parameters accessible via `window.physicsTestPanel.settings`:
 1. Check `physics-attack-sync.js` for animation broadcasting
 2. Verify socket connection in browser console
 3. Look for "physicsAttackAnimation" events in network tab
+
+**Working with AI Learning System:**
+1. Test AI behavior at `/ai-test.html`
+2. Export/import learning data for analysis
+3. Monitor `[AI Patch]` logs in console
+4. Adjust weights in `MoveEvaluator.js` for different behaviors

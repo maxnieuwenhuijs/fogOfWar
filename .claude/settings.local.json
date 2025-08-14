@@ -14,8 +14,12 @@
       "Bash(npm start)",
       "Bash(npm run dev:*)",
       "Bash(rm:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(for file in *.jsonl)",
+      "Bash(done)",
+      "Bash(curl:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

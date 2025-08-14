@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning System Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        h1, h2 {
+            color: #0f0;
+            border-bottom: 2px solid #0f0;
+            padding-bottom: 10px;
+        }
+        .section {
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+        select {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 5px;
+            font-family: monospace;
+        }
+        .output {
+            background: #111;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .stat-card {
+            background: #111;
+            padding: 10px;
+            border: 1px solid #333;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+        .stat-value {
+            color: #0f0;
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+        .cards-display {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .card {
+            border: 1px solid #0f0;
+            padding: 10px;
+            min-width: 100px;
+        }
+        .move-grid {
+            display: inline-block;
+            border: 1px solid #0f0;
+        }
+        .grid-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #333;
+            display: inline-block;
+            text-align: center;
+            line-height: 30px;
+        }
+        .grid-row {
+            display: block;
+            height: 30px;
+        }
+        .pawn { background: #00f; color: #fff; }
+        .enemy { background: #f00; color: #fff; }
+        .possible-move { background: #0f0; opacity: 0.3; }
+        .best-move { background: #0f0; opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI Learning System Test Panel</h1>
+
+    <div class="section">
+        <h2>System Status</h2>
+        <div class="stats" id="systemStats">
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" id="systemStatus">Not Initialized</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Difficulty</div>
+                <div class="stat-value" id="currentDifficulty">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Historical Games</div>
+                <div class="stat-value" id="historicalGames">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">AI Win Rate</div>
+                <div class="stat-value" id="winRate">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Configuration</h2>
+        <label>Difficulty: </label>
+        <select id="difficultySelect">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+        <button onclick="updateDifficulty()">Apply</button>
+        <button onclick="initSystem()">Initialize AI</button>
+        <button onclick="getStats()">Refresh Stats</button>
+    </div>
+
+    <div class="section">
+        <h2>Card Generation Test</h2>
+        <button onclick="generateCards()">Generate AI Cards</button>
+        <button onclick="generateCounterCards()">Generate Counter Cards</button>
+        <div class="cards-display" id="cardsDisplay"></div>
+    </div>
+
+    <div class="section">
+        <h2>Move Evaluation Test</h2>
+        <button onclick="testMoveEvaluation()">Test Move Evaluation</button>
+        <div id="moveGrid"></div>
+        <div class="output" id="moveOutput"></div>
+    </div>
+
+    <div class="section">
+        <h2>Pattern Analysis</h2>
+        <button onclick="analyzePatterns()">Analyze Historical Patterns</button>
+        <div class="output" id="patternOutput"></div>
+    </div>
+
+    <div class="section">
+        <h2>Data Management</h2>
+        <button onclick="exportData()">Export Learning Data</button>
+        <button onclick="importData()">Import Learning Data</button>
+        <button onclick="clearData()">Clear All Data</button>
+        <input type="file" id="importFile" style="display:none" accept=".json">
+    </div>
+
+    <div class="section">
+        <h2>Console Output</h2>
+        <div class="output" id="console"></div>
+    </div>
+
+    <script type="module">
+        import { 
+            initLearningAI, 
+            generateAICards, 
+            chooseAIMove,
+            setAIDifficulty,
+            getAIPerformanceStats,
+            exportAILearningData,
+            importAILearningData,
+            clearAILearningData,
+            getLearningAI
+        } from './js/ai-system/singleplayer-integration.js';
+
+        // Make functions available globally for onclick handlers
+        window.initSystem = async function() {
+            try {
+                log('Initializing AI system...');
+                const ai = await initLearningAI();
+                log('AI system initialized successfully');
+                await getStats();
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.updateDifficulty = function() {
+            const difficulty = document.getElementById('difficultySelect').value;
+            setAIDifficulty(difficulty);
+            log(`Difficulty set to: ${difficulty}`);
+            getStats();
+        };
+
+        window.getStats = async function() {
+            try {
+                const stats = await getAIPerformanceStats();
+                if (stats) {
+                    document.getElementById('systemStatus').textContent = 'Initialized';
+                    document.getElementById('currentDifficulty').textContent = stats.difficulty;
+                    document.getElementById('historicalGames').textContent = stats.historicalGames;
+                    document.getElementById('winRate').textContent = 
+                        stats.recentWinRate !== undefined ? 
+                        (stats.recentWinRate * 100).toFixed(1) + '%' : 'N/A';
+                    log('Stats updated');
+                }
+            } catch (error) {
+                log('Error getting stats: ' + error.message, 'error');
+            }
+        };
+
+        window.generateCards = async function() {
+            try {
+                const cards = await generateAICards();
+                displayCards(cards, 'AI Cards');
+                log('Generated AI cards: ' + JSON.stringify(cards, null, 2));
+            } catch (error) {
+                log('Error generating cards: ' + error.message, 'error');
+            }
+        };
+
+        window.generateCounterCards = async function() {
+            try {
+                const playerCards = [
+                    { hp: 1, stamina: 5, attack: 1 },
+                    { hp: 1, stamina: 5, attack: 1 },
+                    { hp: 1, stamina: 5, attack: 1 }
+                ];
+                displayCards(playerCards, 'Player Cards (Speedy)');
+                
+                const aiCards = await generateAICards(playerCards);
+                displayCards(aiCards, 'AI Counter Cards');
+                log('Generated counter cards: ' + JSON.stringify(aiCards, null, 2));
+            } catch (error) {
+                log('Error generating counter cards: ' + error.message, 'error');
+            }
+        };
+
+        window.testMoveEvaluation = async function() {
+            try {
+                const ai = getLearningAI();
+                
+                // Create test game state
+                const testPawn = {
+                    id: 'test_pawn',
+                    player: 2,
+                    position: { x: 5, y: 5 },
+                    hp: 2,
+                    stamina: 2,
+                    attack: 3,
+                    active: true
+                };
+                
+                const gameState = {
+                    pawns: [
+                        testPawn,
+                        { id: 'enemy1', player: 1, position: { x: 5, y: 7 }, hp: 1, stamina: 1, attack: 2, active: true },
+                        { id: 'enemy2', player: 1, position: { x: 3, y: 5 }, hp: 2, stamina: 2, attack: 1, active: true }
+                    ],
+                    havens: {
+                        player1: [{ x: 5, y: 10 }],
+                        player2: [{ x: 5, y: 0 }]
+                    }
+                };
+
+                const move = await ai.chooseMove(testPawn, gameState);
+                
+                displayMoveGrid(testPawn, gameState, move);
+                log(`Best move for pawn at (${testPawn.position.x}, ${testPawn.position.y}): (${move.x}, ${move.y})`);
+                
+                // Get detailed evaluation
+                const possibleMoves = ai.getPossibleMoves(testPawn, gameState);
+                const evaluations = possibleMoves.map(m => ({
+                    pos: m,
+                    score: ai.moveEvaluator.evaluateMove(testPawn, m, gameState, ai.difficulty)
+                }));
+                
+                evaluations.sort((a, b) => b.score.totalScore - a.score.totalScore);
+                
+                document.getElementById('moveOutput').textContent = 
+                    'Move Evaluations:\n' + 
+                    evaluations.slice(0, 5).map(e => 
+                        `(${e.pos.x}, ${e.pos.y}): ${e.score.totalScore.toFixed(3)} [${e.score.moveType}]`
+                    ).join('\n');
+                    
+            } catch (error) {
+                log('Error testing move evaluation: ' + error.message, 'error');
+            }
+        };
+
+        window.analyzePatterns = async function() {
+            try {
+                const ai = getLearningAI();
+                await ai.init();
+                
+                const analysis = await ai.analytics.analyzeStoredGames({ limit: 50 });
+                
+                const output = {
+                    totalGames: analysis.totalGames,
+                    difficulties: Object.keys(analysis.byDifficulty).map(diff => ({
+                        difficulty: diff,
+                        games: analysis.byDifficulty[diff].total,
+                        winRate: (analysis.byDifficulty[diff].winRate * 100).toFixed(1) + '%'
+                    })),
+                    topCardPatterns: Array.from(analysis.patterns.cards.entries())
+                        .slice(0, 3)
+                        .map(([key, data]) => ({
+                            pattern: JSON.parse(key),
+                            wins: data.wins,
+                            losses: data.losses,
+                            winRate: ((data.wins / (data.wins + data.losses)) * 100).toFixed(1) + '%'
+                        }))
+                };
+                
+                document.getElementById('patternOutput').textContent = 
+                    JSON.stringify(output, null, 2);
+                    
+                log('Pattern analysis complete');
+            } catch (error) {
+                log('Error analyzing patterns: ' + error.message, 'error');
+            }
+        };
+
+        window.exportData = async function() {
+            try {
+                const data = await exportAILearningData();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ai-learning-data-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                log('Data exported successfully');
+            } catch (error) {
+                log('Error exporting data: ' + error.message, 'error');
+            }
+        };
+
+        window.importData = function() {
+            document.getElementById('importFile').click();
+        };
+
+        window.clearData = async function() {
+            if (confirm('Are you sure you want to clear all learning data?')) {
+                try {
+                    await clearAILearningData(0);
+                    log('All learning data cleared');
+                    await getStats();
+                } catch (error) {
+                    log('Error clearing data: ' + error.message, 'error');
+                }
+            }
+        };
+
+        function displayCards(cards, title) {
+            const display = document.getElementById('cardsDisplay');
+            const section = document.createElement('div');
+            section.innerHTML = `<h3>${title}</h3>`;
+            
+            const cardsHtml = cards.map(card => `
+                <div class="card">
+                    <div>HP: ${card.hp}</div>
+                    <div>Stamina: ${card.stamina}</div>
+                    <div>Attack: ${card.attack}</div>
+                </div>
+            `).join('');
+            
+            section.innerHTML += `<div class="cards-display">${cardsHtml}</div>`;
+            display.innerHTML = '';
+            display.appendChild(section);
+        }
+
+        function displayMoveGrid(pawn, gameState, bestMove) {
+            const grid = document.getElementById('moveGrid');
+            let html = '<div class="move-grid">';
+            
+            for (let y = 0; y <= 10; y++) {
+                html += '<div class="grid-row">';
+                for (let x = 0; x <= 10; x++) {
+                    let cellClass = 'grid-cell';
+                    let content = '';
+                    
+                    if (x === pawn.position.x && y === pawn.position.y) {
+                        cellClass += ' pawn';
+                        content = 'P';
+                    } else if (bestMove && x === bestMove.x && y === bestMove.y) {
+                        cellClass += ' best-move';
+                        content = '★';
+                    } else {
+                        const enemy = gameState.pawns.find(p => 
+                            p.position && p.position.x === x && p.position.y === y && p.player === 1
+                        );
+                        if (enemy) {
+                            cellClass += ' enemy';
+                            content = 'E';
+                        }
+                    }
+                    
+                    html += `<div class="${cellClass}">${content}</div>`;
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+            
+            grid.innerHTML = html;
+        }
+
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : '✓';
+            console.textContent = `[${timestamp}] ${prefix} ${message}\n` + console.textContent;
+            
+            // Keep only last 20 lines
+            const lines = console.textContent.split('\n');
+            if (lines.length > 20) {
+                console.textContent = lines.slice(0, 20).join('\n');
+            }
+        }
+
+        // Handle file import
+        document.getElementById('importFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                try {
+                    const text = await file.text();
+                    const data = JSON.parse(text);
+                    await importAILearningData(data);
+                    log('Data imported successfully');
+                    await getStats();
+                } catch (error) {
+                    log('Error importing data: ' + error.message, 'error');
+                }
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('AI Test Panel loaded');
+        });
+    </script>
+</body>
+</html>
