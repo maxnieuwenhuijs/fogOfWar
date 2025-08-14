@@ -17,6 +17,12 @@
             color: #0f0;
             border-bottom: 2px solid #0f0;
             padding-bottom: 10px;
+            position: relative;
+        }
+        h1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .section {
             background: #000;
@@ -103,10 +109,201 @@
         .enemy { background: #f00; color: #fff; }
         .possible-move { background: #0f0; opacity: 0.3; }
         .best-move { background: #0f0; opacity: 0.7; }
+        
+        /* Help Modal Styles */
+        .help-btn {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+        .help-btn:hover {
+            background: #0a0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            overflow: auto;
+        }
+        .modal-content {
+            background-color: #000;
+            margin: 5% auto;
+            padding: 20px;
+            border: 2px solid #0f0;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #0f0;
+            font-family: monospace;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .close {
+            color: #0f0;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #f00;
+        }
+        .help-section {
+            margin-bottom: 25px;
+        }
+        .help-section h3 {
+            color: #0f0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .help-section p, .help-section ul {
+            line-height: 1.6;
+            margin-left: 20px;
+        }
+        .help-section ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .help-section li {
+            margin-bottom: 5px;
+        }
+        .help-section li:before {
+            content: "▸ ";
+            color: #0f0;
+        }
+        .help-example {
+            background: #111;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #0f0;
+        }
+        .help-emoji {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>🤖 AI Learning System Test Panel</h1>
+    <h1>
+        <span>🤖 AI Learning System Test Panel</span>
+        <button class="help-btn" onclick="showHelp()">❓ Help</button>
+    </h1>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="border: none; margin: 0;">📚 AI Test Panel Guide</h2>
+                <span class="close" onclick="closeHelp()">&times;</span>
+            </div>
+            
+            <div class="help-section">
+                <h3><span class="help-emoji">📊</span>System Status</h3>
+                <p>Shows real-time AI statistics:</p>
+                <ul>
+                    <li><strong>Status:</strong> Whether AI is initialized</li>
+                    <li><strong>Difficulty:</strong> Current AI level (Easy/Medium/Hard)</li>
+                    <li><strong>Historical Games:</strong> Number of games AI has learned from</li>
+                    <li><strong>AI Win Rate:</strong> Recent performance percentage</li>
+                </ul>
+                <div class="help-example">
+                    💡 Click "Initialize AI" first, then "Refresh Stats" to see data
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3><span class="help-emoji">⚙️</span>Configuration</h3>
+                <ul>
+                    <li><strong>Difficulty Dropdown:</strong> Choose AI difficulty level</li>
+                    <li><strong>Apply:</strong> Activates selected difficulty</li>
+                    <li><strong>Initialize AI:</strong> Starts the learning system</li>
+                    <li><strong>Refresh Stats:</strong> Updates statistics display</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3><span class="help-emoji">🎴</span>Card Generation Test</h3>
+                <ul>
+                    <li><strong>Generate AI Cards:</strong> Shows what cards AI would choose</li>
+                    <li><strong>Generate Counter Cards:</strong> Shows AI counter-strategy to "Speedy" preset</li>
+                </ul>
+                <div class="help-example">
+                    Example: Speedy cards (HP:1, Stamina:5, Attack:1) → AI counters with (HP:3, Stamina:1, Attack:3)
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3><span class="help-emoji">🎯</span>Move Evaluation Test</h3>
+                <p>Visualizes AI decision-making on an 11x11 grid:</p>
+                <ul>
+                    <li><strong>P (Blue):</strong> AI Pawn position</li>
+                    <li><strong>E (Red):</strong> Enemy pawn positions</li>
+                    <li><strong>★ (Green):</strong> Best move chosen by AI</li>
+                </ul>
+                <p>Shows top 5 moves with scores and types (advance/retreat/aggressive/defensive)</p>
+            </div>
+
+            <div class="help-section">
+                <h3><span class="help-emoji">📈</span>Pattern Analysis</h3>
+                <p>Analyzes stored games to show:</p>
+                <ul>
+                    <li>Total games analyzed</li>
+                    <li>Win rates per difficulty</li>
+                    <li>Most successful card patterns</li>
+                    <li>Common strategies</li>
+                </ul>
+                <div class="help-example">
+                    💡 Play some games first, then analyze to see what AI learned
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3><span class="help-emoji">💾</span>Data Management</h3>
+                <ul>
+                    <li><strong>Export:</strong> Download AI knowledge as JSON file</li>
+                    <li><strong>Import:</strong> Load previously exported AI data</li>
+                    <li><strong>Clear:</strong> Reset AI to start learning from scratch</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3><span class="help-emoji">🎮</span>Quick Start</h3>
+                <ol style="list-style-type: decimal; padding-left: 20px;">
+                    <li>Click "Initialize AI"</li>
+                    <li>Select difficulty and click "Apply"</li>
+                    <li>Test card generation and move evaluation</li>
+                    <li>Play some games in main menu</li>
+                    <li>Return here to analyze patterns</li>
+                </ol>
+            </div>
+
+            <div class="help-section">
+                <h3><span class="help-emoji">🎯</span>Target Win Rates</h3>
+                <ul>
+                    <li><strong>Easy:</strong> Player wins 70-80% (AI wins 20-30%)</li>
+                    <li><strong>Medium:</strong> Player wins 45-55% (AI wins 45-55%)</li>
+                    <li><strong>Hard:</strong> Player wins 20-30% (AI wins 70-80%)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
     <div class="section">
         <h2>System Status</h2>
@@ -188,6 +385,23 @@
             clearAILearningData,
             getLearningAI
         } from './js/ai-system/singleplayer-integration.js';
+
+        // Help modal functions
+        window.showHelp = function() {
+            document.getElementById('helpModal').style.display = 'block';
+        };
+
+        window.closeHelp = function() {
+            document.getElementById('helpModal').style.display = 'none';
+        };
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('helpModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
 
         // Make functions available globally for onclick handlers
         window.initSystem = async function() {
